@@ -26,6 +26,8 @@ const userRouter = require("./router/user");
 const movieRoutes = require("./router/movie");
 const commentRouter = require("./router/comment");
 const contectRouter = require("./router/contect");
+const navbarMenuRouter = require("./router/navbarMenu");
+const siteSettingsRouter = require("./router/siteSettings");
 const healthRouter = require("./router/health");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -75,6 +77,8 @@ app.use("/api", userRouter);
 app.use("/api/movie", movieRoutes);
 app.use("/api/movie/:id/comments", commentRouter);
 app.use("/api", contectRouter);
+app.use("/api", navbarMenuRouter);
+app.use("/api", siteSettingsRouter);
 
 // ── 404 handler ───────────────────────────────────────────
 app.use((_req, res) => {

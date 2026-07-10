@@ -43,6 +43,7 @@ const movieSchema = mongoose.Schema({
     {
       provider: String,
       quality: String,
+      episode: String,
       url: String,
     },
   ],

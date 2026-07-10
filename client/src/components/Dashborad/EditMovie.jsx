@@ -61,8 +61,13 @@ const EditMovie = () => {
           views:        m.views        ?? "",
           players:      m.players?.length ? m.players : [""],
           downloadLinks: m.downloadLinks?.length
-            ? m.downloadLinks
-            : [{ provider: "", quality: "", url: "" }],
+            ? m.downloadLinks.map(d => ({
+                provider: d.provider || "",
+                quality:  d.quality  || "",
+                episode:  d.episode  || "",
+                url:      d.url      || "",
+              }))
+            : [{ provider: "", quality: "", episode: "", url: "" }],
         });
         setIsTopMovie(!!m.isTopMovie);
         setPosterPreview(m.poster);
@@ -96,7 +101,7 @@ const EditMovie = () => {
     const arr = [...form.downloadLinks]; arr[i] = { ...arr[i], [field]: val };
     setForm((p) => ({ ...p, downloadLinks: arr }));
   };
-  const addDL    = () => setForm((p) => ({ ...p, downloadLinks: [...p.downloadLinks, { provider: "", quality: "", url: "" }] }));
+  const addDL    = () => setForm((p) => ({ ...p, downloadLinks: [...p.downloadLinks, { provider: "", quality: "", episode: "", url: "" }] }));
   const removeDL = (i) => setForm((p) => ({ ...p, downloadLinks: p.downloadLinks.filter((_, x) => x !== i) }));
 
   /* Poster */
@@ -360,32 +365,125 @@ const EditMovie = () => {
                   Download Links
                 </h3>
                 <Button type="button" variant="secondary" size="sm" onClick={addDL} disabled={loading}>
-                  <PlusCircle className="w-4 h-4 mr-1" /> Add Link
+                  <PlusCircle className="w-4 h-4 mr-1" /> Add Provider Group
                 </Button>
               </div>
-              <div className="space-y-3">
-                {form.downloadLinks.map((link, i) => (
-                  <div key={i} className="grid sm:grid-cols-3 gap-2 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
-                    <Input placeholder="Provider" value={link.provider}
-                      onChange={(e) => handleDLChange(i, "provider", e.target.value)}
-                      disabled={loading} />
-                    <Input placeholder="Quality (e.g. 1080p)" value={link.quality}
-                      onChange={(e) => handleDLChange(i, "quality", e.target.value)}
-                      disabled={loading} />
-                    <div className="flex gap-2">
-                      <Input placeholder="Download URL" value={link.url}
-                        onChange={(e) => handleDLChange(i, "url", e.target.value)}
-                        disabled={loading} />
-                      {form.downloadLinks.length > 1 && (
-                        <Button type="button" variant="destructive" size="icon"
-                          onClick={() => removeDL(i)} disabled={loading}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+
+              {(() => {
+                const groups = [];
+                form.downloadLinks.forEach((link, idx) => {
+                  const prev = form.downloadLinks[idx - 1];
+                  if (idx === 0 || link.provider !== prev.provider) {
+                    groups.push({ startIdx: idx, provider: link.provider });
+                  }
+                });
+
+                return (
+                  <div className="space-y-4">
+                    {groups.map((grp, grpIdx) => {
+                      const nextGrpStart = groups[grpIdx + 1]?.startIdx ?? form.downloadLinks.length;
+                      const grpLinks = form.downloadLinks.slice(grp.startIdx, nextGrpStart);
+
+                      return (
+                        <div key={grp.startIdx} className="border border-gray-600 rounded-lg overflow-hidden">
+                          {/* Provider header */}
+                          <div className="flex items-center gap-2 bg-gray-700 px-3 py-2">
+                            <Input
+                              placeholder="Provider name (e.g. Streamtape)"
+                              value={grp.provider}
+                              onChange={(e) => {
+                                const newLinks = [...form.downloadLinks];
+                                for (let i = grp.startIdx; i < nextGrpStart; i++) {
+                                  newLinks[i] = { ...newLinks[i], provider: e.target.value };
+                                }
+                                setForm(p => ({ ...p, downloadLinks: newLinks }));
+                              }}
+                              disabled={loading}
+                              className="flex-1 bg-gray-800 border-gray-600 font-medium"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={loading}
+                              onClick={() => {
+                                const newLinks = [...form.downloadLinks];
+                                newLinks.splice(nextGrpStart, 0, {
+                                  provider: grp.provider,
+                                  quality: grpLinks[0]?.quality || "",
+                                  episode: "",
+                                  url: "",
+                                });
+                                setForm(p => ({ ...p, downloadLinks: newLinks }));
+                              }}
+                              className="shrink-0 border-gray-500 text-gray-300 hover:text-white text-xs"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5 mr-1" /> Add Link
+                            </Button>
+                          </div>
+
+                          {/* Quality (shared) */}
+                          <div className="px-3 py-2 bg-gray-700/40 border-b border-gray-600">
+                            <Input
+                              placeholder="Quality (e.g. 1080p, 720p, 360p)"
+                              value={grpLinks[0]?.quality || ""}
+                              onChange={(e) => {
+                                const newLinks = [...form.downloadLinks];
+                                for (let i = grp.startIdx; i < nextGrpStart; i++) {
+                                  newLinks[i] = { ...newLinks[i], quality: e.target.value };
+                                }
+                                setForm(p => ({ ...p, downloadLinks: newLinks }));
+                              }}
+                              disabled={loading}
+                              className="bg-gray-800 border-gray-600"
+                            />
+                          </div>
+
+                          {/* Individual links */}
+                          <div className="divide-y divide-gray-700">
+                            {grpLinks.map((link, relIdx) => {
+                              const absIdx = grp.startIdx + relIdx;
+                              return (
+                                <div key={absIdx} className="flex items-center gap-2 px-3 py-2 bg-gray-800/40">
+                                  <span className="text-gray-500 text-xs w-5 shrink-0 text-right">
+                                    {relIdx + 1}.
+                                  </span>
+                                  <Input
+                                    placeholder="Episode (optional)"
+                                    value={link.episode || ""}
+                                    onChange={(e) => handleDLChange(absIdx, "episode", e.target.value)}
+                                    disabled={loading}
+                                    className="w-44 shrink-0 bg-gray-800 border-gray-600 text-sm"
+                                  />
+                                  <Input
+                                    placeholder="Download URL"
+                                    value={link.url}
+                                    onChange={(e) => handleDLChange(absIdx, "url", e.target.value)}
+                                    disabled={loading}
+                                    className="flex-1 bg-gray-800 border-gray-600 text-sm"
+                                  />
+                                  {form.downloadLinks.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      onClick={() => removeDL(absIdx)}
+                                      disabled={loading}
+                                      className="shrink-0"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </section>
 
             <Button type="submit" className="w-full" size="lg" disabled={loading} aria-busy={loading}>

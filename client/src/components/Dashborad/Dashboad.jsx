@@ -25,7 +25,7 @@ const INITIAL_FORM = {
   genres: [],
   releaseDate: "",
   players: [""],
-  downloadLinks: [{ provider: "", quality: "", url: "" }],
+  downloadLinks: [{ provider: "", quality: "", episode: "", url: "" }],
 };
 
 // ── Helper: extract src URL from a full <iframe> tag or return as-is ──
@@ -86,7 +86,7 @@ const CreateMovieForm = () => {
   const addDownloadLink = () =>
     setForm((prev) => ({
       ...prev,
-      downloadLinks: [...prev.downloadLinks, { provider: "", quality: "", url: "" }],
+      downloadLinks: [...prev.downloadLinks, { provider: "", quality: "", episode: "", url: "" }],
     }));
 
   const removeDownloadLink = (index) =>
@@ -243,12 +243,6 @@ const CreateMovieForm = () => {
                   <Input id="releaseDate" name="releaseDate" type="date" value={form.releaseDate}
                     onChange={handleChange} disabled={loading} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="views">Initial Views</Label>
-                  <Input id="views" name="views" type="number" min="0" value={form.views}
-                    onChange={handleChange} placeholder="0" disabled={loading} />
-                </div>
-
                 {/* Top Movie toggle */}
                 <div className="sm:col-span-2 flex items-center justify-between rounded-lg border border-gray-600 bg-gray-700/40 px-4 py-3">
                   <div>
@@ -350,33 +344,130 @@ const CreateMovieForm = () => {
                   Download Links
                 </h3>
                 <Button type="button" variant="secondary" size="sm" onClick={addDownloadLink} disabled={loading}>
-                  <PlusCircle className="w-4 h-4 mr-1" /> Add Link
+                  <PlusCircle className="w-4 h-4 mr-1" /> Add Provider Group
                 </Button>
               </div>
-              <div className="space-y-3">
-                {form.downloadLinks.map((link, index) => (
-                  <div key={index} className="grid sm:grid-cols-3 gap-2 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
-                    <Input placeholder="Provider (e.g. Google Drive)" value={link.provider}
-                      onChange={(e) => handleDownloadChange(index, "provider", e.target.value)}
-                      disabled={loading} aria-label={`Download ${index + 1} provider`} />
-                    <Input placeholder="Quality (e.g. 1080p)" value={link.quality}
-                      onChange={(e) => handleDownloadChange(index, "quality", e.target.value)}
-                      disabled={loading} aria-label={`Download ${index + 1} quality`} />
-                    <div className="flex gap-2">
-                      <Input placeholder="Download URL" value={link.url}
-                        onChange={(e) => handleDownloadChange(index, "url", e.target.value)}
-                        disabled={loading} aria-label={`Download ${index + 1} URL`} />
-                      {form.downloadLinks.length > 1 && (
-                        <Button type="button" variant="destructive" size="icon"
-                          onClick={() => removeDownloadLink(index)} disabled={loading}
-                          aria-label={`Remove download link ${index + 1}`}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
+
+              {/* Group links by provider index for display */}
+              {(() => {
+                // Build groups: each "group" starts when provider changes
+                // We track groups by first-link index so edits stay in sync
+                const groups = [];
+                form.downloadLinks.forEach((link, idx) => {
+                  const prev = form.downloadLinks[idx - 1];
+                  if (idx === 0 || link.provider !== prev.provider) {
+                    groups.push({ startIdx: idx, provider: link.provider });
+                  }
+                });
+
+                return (
+                  <div className="space-y-4">
+                    {groups.map((grp, grpIdx) => {
+                      const nextGrpStart = groups[grpIdx + 1]?.startIdx ?? form.downloadLinks.length;
+                      const grpLinks = form.downloadLinks.slice(grp.startIdx, nextGrpStart);
+
+                      return (
+                        <div key={grp.startIdx} className="border border-gray-600 rounded-lg overflow-hidden">
+                          {/* Provider header row */}
+                          <div className="flex items-center gap-2 bg-gray-700 px-3 py-2">
+                            <Input
+                              placeholder="Provider name (e.g. Streamtape)"
+                              value={grp.provider}
+                              onChange={(e) => {
+                                // Update all links in this group with new provider name
+                                const newLinks = [...form.downloadLinks];
+                                for (let i = grp.startIdx; i < nextGrpStart; i++) {
+                                  newLinks[i] = { ...newLinks[i], provider: e.target.value };
+                                }
+                                setForm(p => ({ ...p, downloadLinks: newLinks }));
+                              }}
+                              disabled={loading}
+                              className="flex-1 bg-gray-800 border-gray-600 font-medium"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              disabled={loading}
+                              onClick={() => {
+                                // Add new link inside this provider group
+                                const newLinks = [...form.downloadLinks];
+                                newLinks.splice(nextGrpStart, 0, {
+                                  provider: grp.provider,
+                                  quality: grpLinks[0]?.quality || "",
+                                  episode: "",
+                                  url: "",
+                                });
+                                setForm(p => ({ ...p, downloadLinks: newLinks }));
+                              }}
+                              className="shrink-0 border-gray-500 text-gray-300 hover:text-white text-xs"
+                            >
+                              <PlusCircle className="w-3.5 h-3.5 mr-1" /> Add Link
+                            </Button>
+                          </div>
+
+                          {/* Quality row (shared for group) */}
+                          <div className="px-3 py-2 bg-gray-700/40 border-b border-gray-600">
+                            <Input
+                              placeholder="Quality (e.g. 1080p, 720p, 360p)"
+                              value={grpLinks[0]?.quality || ""}
+                              onChange={(e) => {
+                                const newLinks = [...form.downloadLinks];
+                                for (let i = grp.startIdx; i < nextGrpStart; i++) {
+                                  newLinks[i] = { ...newLinks[i], quality: e.target.value };
+                                }
+                                setForm(p => ({ ...p, downloadLinks: newLinks }));
+                              }}
+                              disabled={loading}
+                              className="bg-gray-800 border-gray-600"
+                            />
+                          </div>
+
+                          {/* Individual links */}
+                          <div className="divide-y divide-gray-700">
+                            {grpLinks.map((link, relIdx) => {
+                              const absIdx = grp.startIdx + relIdx;
+                              return (
+                                <div key={absIdx} className="flex items-center gap-2 px-3 py-2 bg-gray-800/40">
+                                  <span className="text-gray-500 text-xs w-5 shrink-0 text-right">
+                                    {relIdx + 1}.
+                                  </span>
+                                  <Input
+                                    placeholder="Episode (e.g. Episode 1) — optional"
+                                    value={link.episode || ""}
+                                    onChange={(e) => handleDownloadChange(absIdx, "episode", e.target.value)}
+                                    disabled={loading}
+                                    className="w-44 shrink-0 bg-gray-800 border-gray-600 text-sm"
+                                  />
+                                  <Input
+                                    placeholder="Download URL"
+                                    value={link.url}
+                                    onChange={(e) => handleDownloadChange(absIdx, "url", e.target.value)}
+                                    disabled={loading}
+                                    className="flex-1 bg-gray-800 border-gray-600 text-sm"
+                                  />
+                                  {form.downloadLinks.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      onClick={() => removeDownloadLink(absIdx)}
+                                      disabled={loading}
+                                      className="shrink-0"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </section>
 
             <Button type="submit" className="w-full" size="lg" disabled={loading} aria-busy={loading}>

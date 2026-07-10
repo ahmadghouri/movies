@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Search, Film, LogIn } from "lucide-react";
+import { Search, Film } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const Navbar = ({ setSearchh }) => {
   const [search, setSearch] = useState("");
+  const { siteName } = useSiteSettings();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -28,10 +30,10 @@ const Navbar = ({ setSearchh }) => {
         <Link
           to="/"
           className="flex items-center gap-2 text-white font-bold text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
-          aria-label="MovieMania — Home"
+          aria-label={`${siteName} — Home`}
         >
           <Film className="w-7 h-7 text-red-500" aria-hidden="true" />
-          <span>MovieMania</span>
+          <span>{siteName}</span>
         </Link>
 
         {/* Search */}
@@ -64,13 +66,7 @@ const Navbar = ({ setSearchh }) => {
           </Button>
         </form>
 
-        {/* Admin link */}
-        <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
-          <Link to="/signin">
-            <LogIn className="w-4 h-4 mr-1.5" aria-hidden="true" />
-            Admin
-          </Link>
-        </Button>
+        {/* Admin link removed */}
       </nav>
     </header>
   );

@@ -9,6 +9,8 @@ import AppDash from "./components/AppDash";
 import ContactForm from "./pages/Contact";
 import AdminContactList from "./components/Dashborad/AdminContactList";
 import AdminComments from "./components/Dashborad/AdminComments";
+import AdminNavbarMenu from "./components/Dashborad/AdminNavbarMenu";
+import AdminSiteSettings from "./components/Dashborad/AdminSiteSettings";
 import PrivateRoute from "./components/Dashborad/PrivateRoute";
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
         <Route path="edit/:id"       element={<EditMovie />} />
         <Route path="admin-contect"  element={<AdminContactList />} />
         <Route path="comments"       element={<AdminComments />} />
+        <Route path="navbar-menu"    element={<AdminNavbarMenu />} />
+        <Route path="site-settings"  element={<AdminSiteSettings />} />
       </Route>
     </Routes>
   );

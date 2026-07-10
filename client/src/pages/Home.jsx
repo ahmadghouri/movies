@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Btnnavbar from "../components/Btnnavbar";
 import FeaturedScroller from "../components/FeaturedScroller";
 import LatestMoviesSection from "../components/LatestMoviesSection";
+import Footer from "../components/Footer";
 
 function Home() {
   const [movies, setMovies] = useState([]);
@@ -33,9 +34,8 @@ function Home() {
   }, []);
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       <Navbar setSearchh={setSearch} />
-      {/* Horizontal poster scroller — shows all movies */}
       <FeaturedScroller />
       <Btnnavbar onFilter={setFilter} />
       <LatestMoviesSection
@@ -44,6 +44,7 @@ function Home() {
         resData={movies}
         loading={loading}
       />
+      <Footer />
     </div>
   );
 }

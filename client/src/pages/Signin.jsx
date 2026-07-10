@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../co
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Spinner } from "../components/ui/spinner";
 import { showSuccess } from "../lib/toast";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 const Signin = () => {
   const navigate = useNavigate();
+  const { siteName } = useSiteSettings();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +46,7 @@ const Signin = () => {
           <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center mx-auto">
             <Film className="w-7 h-7 text-white" aria-hidden="true" />
           </div>
-          <CardTitle className="text-2xl text-white">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl text-white">{siteName}</CardTitle>
           <CardDescription>Sign in to access the admin dashboard</CardDescription>
         </CardHeader>
 

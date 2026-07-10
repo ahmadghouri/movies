@@ -29,7 +29,7 @@ const Navbar = ({ setSearchh }) => {
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2 text-white font-bold text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+          className="flex items-center gap-2 text-white font-bold text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded shrink-0"
           aria-label={`${siteName} — Home`}
         >
           <Film className="w-7 h-7 text-red-500" aria-hidden="true" />
@@ -57,11 +57,11 @@ const Navbar = ({ setSearchh }) => {
                 if (!e.target.value) setSearchh("");
               }}
               onKeyDown={handleKeyDown}
-              className="pl-9 w-full sm:w-64"
+              className="pl-9 w-full sm:w-72 md:w-80"
               aria-label="Search movies"
             />
           </div>
-          <Button type="submit" size="sm" aria-label="Submit search">
+          <Button type="submit" size="sm" aria-label="Submit search" className="shrink-0">
             Search
           </Button>
         </form>

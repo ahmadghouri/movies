@@ -8,7 +8,10 @@ import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { Alert, AlertDescription } from "../ui/alert";
+import PaginationBar from "../ui/PaginationBar";
 import { showSuccess } from "../../lib/toast";
+
+const ITEMS_PER_PAGE = 10;
 
 /* ── Confirm delete dialog ─────────────────────────────── */
 const DeleteDialog = ({ movie, onConfirm, onCancel, loading }) => (
@@ -79,7 +82,8 @@ const MovieList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [toDelete, setToDelete] = useState(null);   // movie object
+  const [currentPage, setCurrentPage] = useState(1);
+  const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
   const fetchMovies = useCallback(async () => {
@@ -118,6 +122,18 @@ const MovieList = () => {
     m.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Reset to page 1 when search changes
+  const handleSearch = (val) => {
+    setSearch(val);
+    setCurrentPage(1);
+  };
+
+  const totalPages  = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated   = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
     <div className="max-w-4xl mx-auto p-4 sm:p-6">
       {/* Header */}
@@ -138,7 +154,7 @@ const MovieList = () => {
           type="search"
           placeholder="Search movies…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
           className="pl-9"
           aria-label="Search movies"
         />
@@ -153,14 +169,14 @@ const MovieList = () => {
       <Card className="border-gray-700">
         <CardContent className="p-0 divide-y divide-gray-700">
           {loading ? (
-            Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)
+            Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => <RowSkeleton key={i} />)
           ) : filtered.length === 0 ? (
             <div className="py-16 text-center text-gray-400">
               <Film className="w-12 h-12 mx-auto mb-3 text-gray-700" />
               {search ? "No movies match your search." : "No movies yet."}
             </div>
           ) : (
-            filtered.map((movie) => (
+            paginated.map((movie) => (
               <div
                 key={movie._id}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-700/30 transition-colors"
@@ -217,6 +233,14 @@ const MovieList = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      <PaginationBar
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+        className="mt-6"
+      />
 
       {/* Delete confirm dialog */}
       {toDelete && (

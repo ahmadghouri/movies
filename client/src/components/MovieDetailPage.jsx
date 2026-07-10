@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Star, Calendar, Clock, Globe, Eye, ArrowLeft, Download } from "lucide-react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosbase from "../../axiosbasa";
+import Navbar from "./Navbar";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -10,6 +11,9 @@ import { Skeleton } from "./ui/skeleton";
 
 const DetailSkeleton = () => (
   <div className="min-h-screen bg-gray-900 text-white">
+    <div className="bg-gray-900 border-b border-gray-800 px-4 py-3">
+      <Skeleton className="h-10 w-full max-w-7xl mx-auto rounded-lg" />
+    </div>
     <div className="bg-black py-4 px-4">
       <Skeleton className="h-8 w-3/4 mx-auto" />
     </div>
@@ -29,10 +33,16 @@ const DetailSkeleton = () => (
 
 const MovieDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [movie, setMovie] = useState(null);
-  const [views, setViews] = useState(null); // live view count
+  const [views, setViews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Search from detail page → go home with search term
+  const handleSearch = (term) => {
+    navigate(`/?search=${encodeURIComponent(term)}`);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -68,20 +78,26 @@ const MovieDetailPage = () => {
 
   if (error || !movie) {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white gap-4">
-        <p className="text-gray-400 text-lg">{error || "Movie not found."}</p>
-        <Button variant="outline" asChild>
-          <Link to="/">
-            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
-            Back to Home
-          </Link>
-        </Button>
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Navbar setSearchh={handleSearch} />
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <p className="text-gray-400 text-lg">{error || "Movie not found."}</p>
+          <Button variant="outline" asChild>
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+              Back to Home
+            </Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      {/* ── Navbar ── */}
+      <Navbar setSearchh={handleSearch} />
+
       {/* Title bar */}
       <div className="bg-black py-4 px-4">
         <div className="max-w-7xl mx-auto">

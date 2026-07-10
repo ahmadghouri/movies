@@ -7,11 +7,16 @@ import PaginationBar from "./ui/PaginationBar";
 const MOVIES_PER_PAGE = 15;
 
 const MovieSkeleton = () => (
-  <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
-    <Skeleton className="aspect-[2/3] w-full" />
-    <div className="p-2 space-y-1">
-      <Skeleton className="h-3 w-4/5" />
-      <Skeleton className="h-3 w-3/5" />
+  <div className="rounded-lg overflow-hidden bg-[#1a6b78] border border-[#1d7a89]">
+    <div className="px-3 pt-3 pb-2 space-y-1.5">
+      <Skeleton className="h-3 w-full bg-[#145560]" />
+      <Skeleton className="h-3 w-4/5 bg-[#145560]" />
+    </div>
+    <div className="mx-2">
+      <Skeleton className="aspect-[3/4] w-full rounded bg-[#145560]" />
+    </div>
+    <div className="px-3 py-2.5">
+      <Skeleton className="h-3 w-2/5 bg-[#145560]" />
     </div>
   </div>
 );
@@ -104,6 +109,9 @@ const LatestMoviesSection = ({ filer, search, resData, loading }) => {
                   title={movie.title}
                   image={movie.poster}
                   id={movie._id}
+                  views={movie.views}
+                  year={movie.year}
+                  language={movie.language}
                 />
               ))}
             </div>

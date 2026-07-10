@@ -24,6 +24,7 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./conf/db");
 const userRouter = require("./router/user");
 const movieRoutes = require("./router/movie");
+const commentRouter = require("./router/comment");
 const contectRouter = require("./router/contect");
 const healthRouter = require("./router/health");
 const errorHandler = require("./middleware/errorHandler");
@@ -72,6 +73,7 @@ connectDB();
 app.use("/health", healthRouter);
 app.use("/api", userRouter);
 app.use("/api/movie", movieRoutes);
+app.use("/api/movie/:id/comments", commentRouter);
 app.use("/api", contectRouter);
 
 // ── 404 handler ───────────────────────────────────────────

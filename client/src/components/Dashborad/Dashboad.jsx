@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui
 import { Alert, AlertDescription } from "../ui/alert";
 import { Separator } from "../ui/separator";
 import { Spinner } from "../ui/spinner";
+import { Switch } from "../ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "../ui/select";
+import { LANGUAGES } from "../../lib/languages";
 import { showSuccess } from "../../lib/toast";
 
 const INITIAL_FORM = {
@@ -34,6 +39,7 @@ const extractPlayerUrl = (raw) => {
 
 const CreateMovieForm = () => {
   const [form, setForm] = useState(INITIAL_FORM);
+  const [isTopMovie, setIsTopMovie] = useState(false);
   const [posterFile, setPosterFile] = useState(null);
   const [posterPreview, setPosterPreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -142,6 +148,7 @@ const CreateMovieForm = () => {
       "downloadLinks",
       JSON.stringify(form.downloadLinks.filter((d) => d.url.trim()))
     );
+    data.append("isTopMovie", String(isTopMovie));
 
     setLoading(true);
     try {
@@ -150,6 +157,7 @@ const CreateMovieForm = () => {
       });
       showSuccess("Movie created successfully!");
       setForm(INITIAL_FORM);
+      setIsTopMovie(false);
       setPosterFile(null);
       setPosterPreview(null);
     } catch (err) {
@@ -211,8 +219,24 @@ const CreateMovieForm = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="language">Language</Label>
-                  <Input id="language" name="language" value={form.language} onChange={handleChange}
-                    placeholder="Hindi" disabled={loading} />
+                  <Select
+                    value={form.language}
+                    onValueChange={(val) =>
+                      setForm((prev) => ({ ...prev, language: val }))
+                    }
+                    disabled={loading}
+                  >
+                    <SelectTrigger id="language" aria-label="Select language">
+                      <SelectValue placeholder="Select language…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((lang) => (
+                        <SelectItem key={lang.value} value={lang.value}>
+                          {lang.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="genre">Genres (comma separated)</Label>
@@ -228,6 +252,23 @@ const CreateMovieForm = () => {
                   <Label htmlFor="views">Initial Views</Label>
                   <Input id="views" name="views" type="number" min="0" value={form.views}
                     onChange={handleChange} placeholder="0" disabled={loading} />
+                </div>
+
+                {/* Top Movie toggle */}
+                <div className="sm:col-span-2 flex items-center justify-between rounded-lg border border-gray-600 bg-gray-700/40 px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-white">Top Movie</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Show this movie in the Top Movies section on the homepage
+                    </p>
+                  </div>
+                  <Switch
+                    id="isTopMovie"
+                    checked={isTopMovie}
+                    onCheckedChange={setIsTopMovie}
+                    disabled={loading}
+                    aria-label="Mark as Top Movie"
+                  />
                 </div>
               </div>
             </section>

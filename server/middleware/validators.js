@@ -93,10 +93,25 @@ const movieCreateValidation = [
     .isInt({ min: 0 }).withMessage("Views must be a non-negative integer."),
 ];
 
+// ── Comment ───────────────────────────────────────────────
+const commentValidation = [
+  body("name")
+    .trim()
+    .notEmpty().withMessage("Name is required.")
+    .isLength({ min: 2, max: 60 }).withMessage("Name must be 2–60 characters.")
+    .escape(),
+  body("comment")
+    .trim()
+    .notEmpty().withMessage("Comment is required.")
+    .isLength({ min: 2, max: 1000 }).withMessage("Comment must be 2–1000 characters.")
+    .escape(),
+];
+
 module.exports = {
   signupValidation,
   signinValidation,
   contactValidation,
   movieIdValidation,
   movieCreateValidation,
+  commentValidation,
 };

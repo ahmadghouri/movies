@@ -36,7 +36,7 @@ function Home() {
     <div>
       <Navbar setSearchh={setSearch} />
       {/* Horizontal poster scroller — shows all movies */}
-      <FeaturedScroller movies={movies} loading={loading} />
+      <FeaturedScroller />
       <Btnnavbar onFilter={setFilter} />
       <LatestMoviesSection
         filer={filter}

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, TrendingUp, Film } from "lucide-react";
+import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import axiosbase from "../../axiosbasa";
 
@@ -126,13 +126,13 @@ const SectionHeader = ({ icon: Icon, title, color = "text-red-500" }) => (
 );
 
 /* ─── Main component ──────────────────────────────────────── */
-const FeaturedScroller = ({ movies, loading }) => {
+const FeaturedScroller = () => {
   const [topMovies, setTopMovies] = useState([]);
   const [topLoading, setTopLoading] = useState(true);
 
   useEffect(() => {
     axiosbase
-      .get("movie/top?limit=15")
+      .get("movie/top")
       .then((res) => {
         const data = Array.isArray(res.data) ? res.data : res.data?.data ?? [];
         setTopMovies(data);
@@ -141,30 +141,13 @@ const FeaturedScroller = ({ movies, loading }) => {
       .finally(() => setTopLoading(false));
   }, []);
 
-  const showTop = topLoading || topMovies.length > 0;
-  const showAll = loading || (movies && movies.length > 0);
-
-  if (!showTop && !showAll) return null;
+  // Nothing to show
+  if (!topLoading && topMovies.length === 0) return null;
 
   return (
-    <div className="bg-gray-950 border-b border-gray-800 py-5 space-y-5">
-
-      {/* ── Top Movies row ─── */}
-      {showTop && (
-        <div>
-          <SectionHeader icon={TrendingUp} title="Top Movies" color="text-yellow-400" />
-          <ScrollRow movies={topMovies} loading={topLoading} count={10} />
-        </div>
-      )}
-
-      {/* ── All Movies row ─── */}
-      {showAll && (
-        <div>
-          <SectionHeader icon={Film} title="All Movies" color="text-red-500" />
-          <ScrollRow movies={movies || []} loading={loading} count={12} />
-        </div>
-      )}
-
+    <div className="bg-gray-950 border-b border-gray-800 py-5">
+      <SectionHeader icon={TrendingUp} title="Top Movies" color="text-yellow-400" />
+      <ScrollRow movies={topMovies} loading={topLoading} count={10} />
     </div>
   );
 };

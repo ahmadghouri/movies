@@ -33,6 +33,11 @@ const movieSchema = mongoose.Schema({
     type: Number,
     default: 0,
   },
+  isTopMovie: {
+    type: Boolean,
+    default: false,
+    index: true,
+  },
   players: [String],
   downloadLinks: [
     {

@@ -6,6 +6,7 @@ const {
   handleIncrementView,
   handleGetGenres,
   handleGetTopMovies,
+  handleToggleTopMovie,
   handleUpdateMovie,
   handleDeleteMovie,
 } = require("../controller/movie.controller");
@@ -40,6 +41,13 @@ movieRoutes.delete(
   authMiddleware, adminMiddleware,
   apiLimiter, movieIdValidation, validate,
   handleDeleteMovie
+);
+
+movieRoutes.patch(
+  "/toggle-top/:id",
+  authMiddleware, adminMiddleware,
+  apiLimiter, movieIdValidation, validate,
+  handleToggleTopMovie
 );
 
 // ── Public routes ─────────────────────────────────────────

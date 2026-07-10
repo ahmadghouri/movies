@@ -8,6 +8,7 @@ import EditMovie from "./components/Dashborad/EditMovie";
 import AppDash from "./components/AppDash";
 import ContactForm from "./pages/Contact";
 import AdminContactList from "./components/Dashborad/AdminContactList";
+import AdminComments from "./components/Dashborad/AdminComments";
 import PrivateRoute from "./components/Dashborad/PrivateRoute";
 
 function App() {
@@ -25,10 +26,11 @@ function App() {
           </PrivateRoute>
         }
       >
-        <Route path="dashboard"     element={<Dashboad />} />
-        <Route path="movies"        element={<MovieList />} />
-        <Route path="edit/:id"      element={<EditMovie />} />
-        <Route path="admin-contect" element={<AdminContactList />} />
+        <Route path="dashboard"      element={<Dashboad />} />
+        <Route path="movies"         element={<MovieList />} />
+        <Route path="edit/:id"       element={<EditMovie />} />
+        <Route path="admin-contect"  element={<AdminContactList />} />
+        <Route path="comments"       element={<AdminComments />} />
       </Route>
     </Routes>
   );

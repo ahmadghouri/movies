@@ -67,6 +67,7 @@ const handleCreateMovie = async (req, res, next) => {
       genre,
       releaseDate: req.body.releaseDate || undefined,
       views: req.body.views ? Number(req.body.views) : 0,
+      isTopMovie: req.body.isTopMovie === "true" || req.body.isTopMovie === true,
       players: safePlayers,
       downloadLinks: safeDownloadLinks,
       poster: result.secure_url,
@@ -153,16 +154,33 @@ const handleGetGenres = async (req, res, next) => {
   }
 };
 
-// GET /api/movie/top — top movies by views
+// GET /api/movie/top — top movies (isTopMovie: true)
 const handleGetTopMovies = async (req, res, next) => {
   try {
-    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit) || 10));
-    const movies = await Movies.find({ views: { $gt: 0 } })
-      .sort({ views: -1 })
-      .limit(limit)
-      .select("_id title poster views year")
+    const movies = await Movies.find({ isTopMovie: true })
+      .sort({ _id: -1 })
+      .select("_id title poster views year isTopMovie")
       .lean();
     return res.status(200).json({ success: true, data: movies });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /api/movie/toggle-top/:id — admin only, toggle isTopMovie
+const handleToggleTopMovie = async (req, res, next) => {
+  try {
+    const movie = await Movies.findById(req.params.id);
+    if (!movie) {
+      return res.status(404).json({ success: false, message: "Movie not found." });
+    }
+    movie.isTopMovie = !movie.isTopMovie;
+    await movie.save();
+    return res.status(200).json({
+      success: true,
+      message: `Movie ${movie.isTopMovie ? "added to" : "removed from"} Top Movies.`,
+      data: { _id: movie._id, isTopMovie: movie.isTopMovie },
+    });
   } catch (error) {
     next(error);
   }
@@ -232,6 +250,9 @@ const handleUpdateMovie = async (req, res, next) => {
         language:      req.body.language     ?? movie.language,
         releaseDate:   req.body.releaseDate  ? new Date(req.body.releaseDate) : movie.releaseDate,
         views:         req.body.views !== undefined ? Number(req.body.views) : movie.views,
+        isTopMovie:    req.body.isTopMovie !== undefined
+                         ? (req.body.isTopMovie === "true" || req.body.isTopMovie === true)
+                         : movie.isTopMovie,
         genre,
         players:       players.filter((p) => typeof p === "string" && p.trim()),
         downloadLinks: downloadLinks.filter((d) => d && typeof d === "object" && d.url),
@@ -282,6 +303,7 @@ module.exports = {
   handleIncrementView,
   handleGetGenres,
   handleGetTopMovies,
+  handleToggleTopMovie,
   handleUpdateMovie,
   handleDeleteMovie,
 };

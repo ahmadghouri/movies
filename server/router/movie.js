@@ -3,20 +3,50 @@ const {
   handleCreateMovie,
   handleGetMovie,
   handleMovieDetail,
+  handleIncrementView,
+  handleGetGenres,
+  handleGetTopMovies,
+  handleUpdateMovie,
+  handleDeleteMovie,
 } = require("../controller/movie.controller");
-const { upload } = require("../middleware/multer"); // multer middleware
+const { upload } = require("../middleware/multer");
 const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
+const { uploadLimiter, publicLimiter, apiLimiter } = require("../middleware/rateLimiter");
+const { movieIdValidation, movieCreateValidation } = require("../middleware/validators");
+const validate = require("../middleware/validate");
 
 const movieRoutes = express.Router();
 
-// 👇 Use multer middleware for single image
+// ── Admin routes ──────────────────────────────────────────
 movieRoutes.post(
   "/create",
-  authMiddleware,
-  upload.single("poster"),
+  authMiddleware, adminMiddleware,
+  uploadLimiter, upload.single("poster"),
+  movieCreateValidation, validate,
   handleCreateMovie
 );
-movieRoutes.get("/getmovie", handleGetMovie);
-movieRoutes.get("/getmovie/:id", handleMovieDetail);
+
+movieRoutes.put(
+  "/update/:id",
+  authMiddleware, adminMiddleware,
+  uploadLimiter, upload.single("poster"),
+  movieIdValidation, movieCreateValidation, validate,
+  handleUpdateMovie
+);
+
+movieRoutes.delete(
+  "/delete/:id",
+  authMiddleware, adminMiddleware,
+  apiLimiter, movieIdValidation, validate,
+  handleDeleteMovie
+);
+
+// ── Public routes ─────────────────────────────────────────
+movieRoutes.get("/genres",        publicLimiter, handleGetGenres);
+movieRoutes.get("/top",           publicLimiter, handleGetTopMovies);
+movieRoutes.get("/getmovie",      publicLimiter, handleGetMovie);
+movieRoutes.get("/getmovie/:id",  publicLimiter, movieIdValidation, validate, handleMovieDetail);
+movieRoutes.patch("/view/:id",    publicLimiter, movieIdValidation, validate, handleIncrementView);
 
 module.exports = movieRoutes;

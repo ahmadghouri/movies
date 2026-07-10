@@ -2,30 +2,48 @@ import React, { useEffect, useState } from "react";
 import axiosbase from "../../axiosbasa";
 import Navbar from "../components/Navbar";
 import Btnnavbar from "../components/Btnnavbar";
+import FeaturedScroller from "../components/FeaturedScroller";
 import LatestMoviesSection from "../components/LatestMoviesSection";
 
 function Home() {
-  const [getData, setGetData] = useState([]);
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
       try {
-        const res = await axiosbase.get("movie/getmovie");
-        setGetData(res.data); // storing actual movie list
+        const res = await axiosbase.get("movie/getmovie?limit=500");
+        if (!cancelled) {
+          const data = Array.isArray(res.data)
+            ? res.data
+            : res.data?.data ?? [];
+          setMovies(data);
+        }
       } catch (error) {
-        console.log(error);
+        console.error("Failed to fetch movies:", error.message);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-
     fetchData();
+    return () => { cancelled = true; };
   }, []);
-  const [filter, setFiler] = useState("");
-  const [search, setSearch] = useState("");
+
   return (
     <div>
       <Navbar setSearchh={setSearch} />
-      <Btnnavbar onFilter={setFiler} />
-      <LatestMoviesSection filer={filter} search={search} resData={getData} />
+      {/* Horizontal poster scroller — shows all movies */}
+      <FeaturedScroller movies={movies} loading={loading} />
+      <Btnnavbar onFilter={setFilter} />
+      <LatestMoviesSection
+        filer={filter}
+        search={search}
+        resData={movies}
+        loading={loading}
+      />
     </div>
   );
 }

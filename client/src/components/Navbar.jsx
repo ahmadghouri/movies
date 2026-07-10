@@ -1,42 +1,78 @@
 import React, { useState } from "react";
-import Btnnavbar from "./Btnnavbar";
-// import logo from "../assets/logo.png";
+import { Search, Film, LogIn } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 const Navbar = ({ setSearchh }) => {
   const [search, setSearch] = useState("");
 
-  const handleSearch = () => {
-    console.log("Search:", search);
-    setSearchh(search); // yahan API call ya filter logic laga sakti ho
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setSearchh(search);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      setSearchh(search);
+    }
   };
 
   return (
-    <nav className="bg-gray-900 px-4 py-3 shadow-md">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0">
+    <header className="bg-gray-900 border-b border-gray-800 px-4 py-3 shadow-md">
+      <nav
+        className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3"
+        aria-label="Main navigation"
+      >
         {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <img src="" alt="Logo" className="h-10 w-10 object-contain" />
-          <h1 className="text-white text-xl font-bold">MovieMania</h1>
-        </div>
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-white font-bold text-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+          aria-label="MovieMania — Home"
+        >
+          <Film className="w-7 h-7 text-red-500" aria-hidden="true" />
+          <span>MovieMania</span>
+        </Link>
 
-        {/* Search Bar */}
-        <div className="flex items-center space-x-2 w-full md:w-auto">
-          <input
-            type="text"
-            placeholder="Search movies..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full md:w-64 px-3 py-1 rounded bg-gray-800 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-red-500 hover:bg-red-600 px-4 py-1 rounded text-white transition duration-200"
-          >
+        {/* Search */}
+        <form
+          onSubmit={handleSearch}
+          className="flex items-center gap-2 w-full sm:w-auto"
+          role="search"
+          aria-label="Search movies"
+        >
+          <div className="relative flex-1 sm:flex-none">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+              aria-hidden="true"
+            />
+            <Input
+              type="search"
+              placeholder="Search movies…"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                if (!e.target.value) setSearchh("");
+              }}
+              onKeyDown={handleKeyDown}
+              className="pl-9 w-full sm:w-64"
+              aria-label="Search movies"
+            />
+          </div>
+          <Button type="submit" size="sm" aria-label="Submit search">
             Search
-          </button>
-        </div>
-      </div>
-    </nav>
+          </Button>
+        </form>
+
+        {/* Admin link */}
+        <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
+          <Link to="/signin">
+            <LogIn className="w-4 h-4 mr-1.5" aria-hidden="true" />
+            Admin
+          </Link>
+        </Button>
+      </nav>
+    </header>
   );
 };
 

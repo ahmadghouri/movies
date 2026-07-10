@@ -1,56 +1,81 @@
-import React, { useState } from "react";
-import { Menu, X } from "lucide-react"; // Use any icon library or your own SVG
+import React, { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const navItems = [
-  "Home",
-  "Hindi",
-  "Comedy",
-  "Horror",
-  "Thriller",
-  "Romance",
-  "Dubbed",
-  "Cartoon",
-  "Punjabi",
-  "Animation",
-  "Marathi",
-  "Netflix",
-  "Contact",
-];
+import axiosbase from "../../axiosbasa";
+
+// These are always shown — not from DB
+const FIXED_START = ["Home"];
+const FIXED_END = ["Contact"];
 
 const ResponsiveMenuNavbar = ({ onFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
-  let navtigate = useNavigate();
+  const [genres, setGenres] = useState([]);       // from backend
+  const [active, setActive] = useState("Home");
+  const navigate = useNavigate();
 
-  function hanleclick(item) {
-    console.log(item);
-    onFilter(item);
+  // Fetch genres from backend once on mount
+  useEffect(() => {
+    axiosbase
+      .get("movie/genres")
+      .then((res) => {
+        const data = Array.isArray(res.data)
+          ? res.data
+          : res.data?.data ?? [];
+        setGenres(data);
+      })
+      .catch(() => {
+        // If fetch fails, genres just stay empty — fixed buttons still work
+      });
+  }, []);
+
+  // Full button list: Home → [db genres] → Contact
+  const allItems = [...FIXED_START, ...genres, ...FIXED_END];
+
+  const handleClick = (item) => {
+    setActive(item);
     setIsOpen(false);
+
     if (item === "Contact") {
-      console.log("click");
-      navtigate("/contact");
+      navigate("/contact");
+      return;
     }
-  }
+    onFilter(item);
+  };
+
+  const btnClass = (item) =>
+    `px-3 py-1 rounded text-sm font-medium transition-colors duration-150 ${
+      active === item
+        ? "bg-red-700 text-white"
+        : "bg-red-500 hover:bg-red-600 text-white"
+    }`;
 
   return (
-    <nav className="bg-gray-900 text-white px-4 py-3 shadow-md">
+    <nav
+      className="bg-gray-900 border-b border-gray-800 text-white px-4 py-3 shadow-md"
+      aria-label="Genre filter"
+    >
       <div className="max-w-7xl mx-auto flex items-center justify-between lg:justify-start">
-        {/* 🔹 Menu icon - now on left side */}
+
+        {/* Mobile hamburger */}
         <div className="lg:hidden mr-4">
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="text-white text-2xl"
+            onClick={() => setIsOpen((v) => !v)}
+            aria-expanded={isOpen}
+            aria-label={isOpen ? "Close genre menu" : "Open genre menu"}
+            className="text-white"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
 
-        {/* 🔹 Buttons - visible on medium and larger screens */}
-        <div className="hidden lg:flex flex-wrap space-x-3">
-          {navItems.map((item, index) => (
+        {/* Desktop — horizontal row */}
+        <div className="hidden lg:flex flex-wrap gap-2">
+          {allItems.map((item) => (
             <button
-              key={index}
-              className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-sm transition duration-200"
-              onClick={() => hanleclick(item)}
+              key={item}
+              className={btnClass(item)}
+              onClick={() => handleClick(item)}
+              aria-pressed={active === item}
             >
               {item}
             </button>
@@ -58,14 +83,15 @@ const ResponsiveMenuNavbar = ({ onFilter }) => {
         </div>
       </div>
 
-      {/* 🔹 Mobile dropdown menu */}
+      {/* Mobile dropdown */}
       {isOpen && (
-        <div className="lg:hidden mt-3 flex flex-col space-y-2">
-          {navItems.map((item, index) => (
+        <div className="lg:hidden mt-3 flex flex-wrap gap-2 pb-1">
+          {allItems.map((item) => (
             <button
-              key={index}
-              className="px-4 py-2 rounded bg-red-500 hover:bg-red-600 w-[120px] text-left transition duration-200"
-              onClick={() => hanleclick(item)}
+              key={item}
+              className={btnClass(item)}
+              onClick={() => handleClick(item)}
+              aria-pressed={active === item}
             >
               {item}
             </button>

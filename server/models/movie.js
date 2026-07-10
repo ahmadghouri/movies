@@ -5,6 +5,10 @@ const movieSchema = mongoose.Schema({
     type: String,
     required: true,
   },
+  description: {
+    type: String,
+    default: "",
+  },
   year: {
     type: String,
   },
@@ -27,6 +31,7 @@ const movieSchema = mongoose.Schema({
   },
   views: {
     type: Number,
+    default: 0,
   },
   players: [String],
   downloadLinks: [

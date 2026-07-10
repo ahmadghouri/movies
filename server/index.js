@@ -1,53 +1,91 @@
-const express = require("express");
-const router = require("./router/user");
-const connectDB = require("./conf/db");
-const cors = require("cors");
-const app = express();
 const dotenv = require("dotenv");
+dotenv.config();
+
+// ── Validate required env vars on startup ─────────────────
+const REQUIRED_ENV = [
+  "MONG_DB",
+  "JWT_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
+];
+const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
+if (missing.length) {
+  console.error(`[STARTUP] Missing required environment variables: ${missing.join(", ")}`);
+  process.exit(1);
+}
+
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-app.use(cookieParser());
+
+const connectDB = require("./conf/db");
+const userRouter = require("./router/user");
 const movieRoutes = require("./router/movie");
 const contectRouter = require("./router/contect");
-// const os = require("os");
-// const cluster = require("cluster");
+const healthRouter = require("./router/health");
+const errorHandler = require("./middleware/errorHandler");
 
-// DBconnect
-connectDB();
+const app = express();
+
+// ── Security headers ──────────────────────────────────────
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // allow Cloudinary images
+    contentSecurityPolicy: false, // set manually or via frontend meta
+  })
+);
+
+// ── CORS ──────────────────────────────────────────────────
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim());
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, cb) => {
+      // Allow non-browser requests (Postman/curl) in development
+      if (!origin && process.env.NODE_ENV !== "production") return cb(null, true);
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error(`CORS: Origin ${origin} not allowed.`));
+    },
     credentials: true,
   })
 );
-dotenv.config();
-app.use(express.json());
-app.use("/api", router);
+
+// ── Request parsing ───────────────────────────────────────
+app.use(cookieParser());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+// ── Logging ───────────────────────────────────────────────
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+}
+
+// ── Database ──────────────────────────────────────────────
+connectDB();
+
+// ── Routes ────────────────────────────────────────────────
+app.use("/health", healthRouter);
+app.use("/api", userRouter);
 app.use("/api/movie", movieRoutes);
 app.use("/api", contectRouter);
 
-// cluster Use
-// const numCPUs = os.cpus().length;
+// ── 404 handler ───────────────────────────────────────────
+app.use((_req, res) => {
+  res.status(404).json({ success: false, message: "Route not found." });
+});
 
-// if (cluster.isPrimary) {
-//   console.log(`🔵 Primary process ${process.pid} is running`);
+// ── Centralized error handler (must be last) ──────────────
+app.use(errorHandler);
 
-//   // Workers fork karo
-//   for (let i = 0; i < numCPUs; i++) {
-//     cluster.fork();
-//   }
-
-//   // Agar worker crash ho jaye
-//   cluster.on("exit", (worker, code, signal) => {
-//     console.log(`🔴 Worker ${worker.process.pid} died. Restarting...`);
-//     cluster.fork();
-//   });
-// } else {
-//   let PROT = 8000;
-//   app.listen(PROT, () => {
-//     console.log("server connect");
-//   });
-// }
-let PROT = process.env.PORT || 8001;
-app.listen(PROT, () => {
-  console.log("server connect", PROT);
+// ── Start server ──────────────────────────────────────────
+const PORT = process.env.PORT || 8001;
+app.listen(PORT, () => {
+  console.log(
+    `[Server] Running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`
+  );
 });

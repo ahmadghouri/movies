@@ -1,10 +1,18 @@
 import React, { useState } from "react";
-import { Mail, Phone, User, MessageSquare, Send } from "lucide-react";
+import { Mail, Phone, User, MessageSquare, Send, ArrowLeft } from "lucide-react";
 import axiosbase from "../../axiosbasa";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Spinner } from "../components/ui/spinner";
+import { showSuccess } from "../lib/toast";
 
 export default function ContactForm() {
-  const navtion = useNavigate();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -12,162 +20,185 @@ export default function ContactForm() {
     subject: "",
     message: "",
   });
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setError("");
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      const res = await axiosbase.post("/contect", formData);
-      if (res.status === 200) {
-        navtion("/");
-      }
-    } catch (error) {
-      navtion("/contect");
-      console.log(error);
+      await axiosbase.post("/contect", formData);
+      showSuccess("Message sent successfully!");
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 bg-white rounded-2xl shadow-xl p-8"
-    >
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Full Name *
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="Your name"
-            />
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-900 py-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        {/* Back button */}
+        <Button variant="ghost" asChild className="text-gray-400 hover:text-white">
+          <Link to="/">
+            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+            Back to Movies
+          </Link>
+        </Button>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Email Address *
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="your@email.com"
-            />
-          </div>
-        </div>
+        <Card className="border-gray-700">
+          <CardHeader>
+            <CardTitle className="text-2xl text-white">Contact Us</CardTitle>
+            <CardDescription>
+              Have a question or feedback? We&apos;d love to hear from you.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            {error && (
+              <Alert variant="destructive" className="mb-6" role="alert">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <div className="grid sm:grid-cols-2 gap-5">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name *</Label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                      aria-hidden="true"
+                    />
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className="pl-9"
+                      placeholder="Your name"
+                      required
+                      minLength={2}
+                      maxLength={60}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address *</Label>
+                  <div className="relative">
+                    <Mail
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                      aria-hidden="true"
+                    />
+                    <Input
+                      id="email"
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="pl-9"
+                      placeholder="you@example.com"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-5">
+                {/* Phone */}
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <div className="relative">
+                    <Phone
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                      aria-hidden="true"
+                    />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className="pl-9"
+                      placeholder="+92 300 1234567"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                {/* Subject */}
+                <div className="space-y-2">
+                  <Label htmlFor="subject">Subject *</Label>
+                  <Input
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="How can we help?"
+                    required
+                    minLength={3}
+                    maxLength={120}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Message */}
+              <div className="space-y-2">
+                <Label htmlFor="message">Message *</Label>
+                <div className="relative">
+                  <MessageSquare
+                    className="absolute left-3 top-3 w-4 h-4 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <Textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    className="pl-9 min-h-[120px]"
+                    placeholder="Tell us more about your inquiry…"
+                    required
+                    minLength={10}
+                    maxLength={2000}
+                    disabled={loading}
+                    rows={5}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 text-right">
+                  {formData.message.length}/2000
+                </p>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading} aria-busy={loading}>
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner size="sm" /> Sending…
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Send className="w-4 h-4" aria-hidden="true" />
+                    Send Message
+                  </span>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <label
-            htmlFor="phone"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Phone Number
-          </label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-              placeholder="+92 300 1234567"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label
-            htmlFor="subject"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Subject *
-          </label>
-          <input
-            type="text"
-            id="subject"
-            name="subject"
-            value={formData.subject}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
-            placeholder="How can we help?"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label
-          htmlFor="message"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          Message *
-        </label>
-        <div className="relative">
-          <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-          <textarea
-            id="message"
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            required
-            rows={6}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 resize-none"
-            placeholder="Tell us more about your inquiry..."
-          />
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center space-x-2"
-      >
-        {isSubmitting ? (
-          <>
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Sending...</span>
-          </>
-        ) : (
-          <>
-            <Send className="w-5 h-5" />
-            <span>Send Message</span>
-          </>
-        )}
-      </button>
-    </form>
+    </div>
   );
 }

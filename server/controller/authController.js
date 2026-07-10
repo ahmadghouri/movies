@@ -1,75 +1,82 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const JWT = require("jsonwebtoken");
-const cookie = require("cookie-parser");
 
-const userSignup = async (req, res) => {
-  const { name, email, password } = req.body;
-  const hashPassword = await bcrypt.hash(password, 10);
-  try {
-    const user = await User.create({ name, email, password: hashPassword });
-    return res.json({ message: "user Add", user });
-  } catch (error) {
-    console.log(error);
-  }
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  secure: process.env.NODE_ENV === "production",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 };
-const userSignin = async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = await User.findOne({ email });
-    // console.log(user);
 
-    if (!user) {
-      return res.status(400).json({ message: "User not Found" });
+// POST /api/signin  — admin only
+const userSignin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find the user and include the password field for comparison
+    const user = await User.findOne({ email }).select("+password");
+
+    // Always return the same generic message — never reveal whether
+    // the email exists or whether the account is not admin
+    if (!user || !user.isAdmin) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password." });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(isMatch);
-
     if (!isMatch) {
-      return res.status(400).json({ message: "User not Found" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid email or password." });
     }
 
-    const token = JWT.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    // Include isAdmin in the token payload so adminMiddleware can verify it
+    const token = JWT.sign(
+      { id: user._id, isAdmin: true },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      sameSite: "Lax", // or 'None' for production with HTTPS
-      secure: false, // true in production
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie("token", token, COOKIE_OPTIONS);
 
-    res.status(200).json({ msg: "Login success", user });
+    return res.status(200).json({
+      success: true,
+      message: "Signed in successfully.",
+      // Never return the password hash
+      data: { id: user._id, name: user.name, email: user.email },
+    });
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const userProfile = async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(400).json({ message: "Token not found" });
-  }
-
+// GET /api/me  — returns profile for the authenticated admin
+const userProfile = async (req, res, next) => {
   try {
-    const decode = JWT.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decode.id).select("-password");
-
+    const user = await User.findById(req.user.id).select("-password");
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found." });
     }
-
-    return res.status(200).json(user);
+    return res.status(200).json({ success: true, data: user });
   } catch (error) {
-    console.log(error);
-    return res.status(401).json({ message: "Invalid token" });
+    next(error);
   }
 };
-module.exports = {
-  userSignup,
-  userSignin,
-  userProfile,
+
+// POST /api/signout
+const userSignout = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  return res
+    .status(200)
+    .json({ success: true, message: "Signed out successfully." });
 };
+
+module.exports = { userSignin, userProfile, userSignout };

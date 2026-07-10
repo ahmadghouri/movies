@@ -1,119 +1,134 @@
 import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, Film } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import axiosbase from "../../axiosbasa";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Spinner } from "../components/ui/spinner";
+import { showSuccess } from "../lib/toast";
 
 const Signin = () => {
-  const navtigeta = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Signin Data:", formData);
-    alert("Signed in successfully!");
+  const handleChange = (e) => {
+    setError("");
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
-  const signinHedle = async () => {
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      const res = await axiosbase.post("/signin", formData);
-      console.log(res);
-      navtigeta("/admin-db");
-    } catch (error) {
-      console.log(error);
+      await axiosbase.post("/signin", formData);
+      showSuccess("Signed in successfully!");
+      navigate("/admin-db/dashboard");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <Card className="w-full max-w-md border-gray-700 bg-gray-800/80 backdrop-blur">
+        <CardHeader className="text-center space-y-3">
+          <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center mx-auto">
+            <Film className="w-7 h-7 text-white" aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            Welcome Back!
-          </h1>
-          <p className="text-gray-600">Sign in to your account to continue</p>
-        </div>
+          <CardTitle className="text-2xl text-white">Welcome Back</CardTitle>
+          <CardDescription>Sign in to access the admin dashboard</CardDescription>
+        </CardHeader>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your email"
-                required
-              />
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4" role="alert">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            {/* Email */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <Mail
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="pl-9"
+                  placeholder="admin@example.com"
+                  required
+                  autoComplete="email"
+                  disabled={loading}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-              >
-                {showPassword ? <EyeOff /> : <Eye />}
-              </button>
+            {/* Password */}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="pl-9 pr-10"
+                  placeholder="••••••••"
+                  required
+                  autoComplete="current-password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+              aria-busy={loading}
             >
-              Forgot Password?
-            </button>
-          </div>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Spinner size="sm" /> Signing in…
+                </span>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
 
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-lg font-medium hover:scale-105 transition"
-            onClick={signinHedle}
-          >
-            Sign In
-          </button>
-        </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Don’t have an account?{" "}
-            <Link
-              to="/signup"
-              className="text-blue-600 font-medium hover:underline"
-            >
-              Sign up
-            </Link>
-          </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

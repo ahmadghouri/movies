@@ -12,18 +12,18 @@ import { Switch } from "../ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../ui/select";
+import { GenreMultiSelect } from "../ui/GenreMultiSelect";
 import { LANGUAGES } from "../../lib/languages";
+import { GENRES } from "../../lib/genres";
 import { showSuccess } from "../../lib/toast";
 
 const INITIAL_FORM = {
   title: "",
-  year: "",
   rating: "",
   duration: "",
   language: "",
-  genre: "",
+  genres: [],
   releaseDate: "",
-  views: "",
   players: [""],
   downloadLinks: [{ provider: "", quality: "", url: "" }],
 };
@@ -133,16 +133,11 @@ const CreateMovieForm = () => {
     const data = new FormData();
     data.append("poster", posterFile);
     data.append("title", form.title.trim());
-    if (form.year) data.append("year", form.year);
     if (form.rating) data.append("rating", form.rating);
     if (form.duration) data.append("duration", form.duration);
     if (form.language) data.append("language", form.language);
     if (form.releaseDate) data.append("releaseDate", form.releaseDate);
-    if (form.views) data.append("views", form.views);
-    data.append(
-      "genre",
-      JSON.stringify(form.genre.split(",").map((g) => g.trim()).filter(Boolean))
-    );
+    data.append("genre", JSON.stringify(form.genres));
     data.append("players", JSON.stringify(cleanedPlayers));
     data.append(
       "downloadLinks",
@@ -203,11 +198,6 @@ const CreateMovieForm = () => {
                     placeholder="Movie title" required disabled={loading} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="year">Year</Label>
-                  <Input id="year" name="year" value={form.year} onChange={handleChange}
-                    placeholder="2024" maxLength={4} disabled={loading} />
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="rating">Rating (0–10)</Label>
                   <Input id="rating" name="rating" type="number" min="0" max="10" step="0.1"
                     value={form.rating} onChange={handleChange} placeholder="7.5" disabled={loading} />
@@ -238,10 +228,15 @@ const CreateMovieForm = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="genre">Genres (comma separated)</Label>
-                  <Input id="genre" name="genre" value={form.genre} onChange={handleChange}
-                    placeholder="Action, Drama, Thriller" disabled={loading} />
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Genres</Label>
+                  <GenreMultiSelect
+                    value={form.genres}
+                    onChange={(val) => setForm((prev) => ({ ...prev, genres: val }))}
+                    genres={GENRES}
+                    disabled={loading}
+                    placeholder="Select genres…"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="releaseDate">Release Date</Label>

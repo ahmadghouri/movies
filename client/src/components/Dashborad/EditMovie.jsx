@@ -14,7 +14,9 @@ import { Switch } from "../ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "../ui/select";
+import { GenreMultiSelect } from "../ui/GenreMultiSelect";
 import { LANGUAGES } from "../../lib/languages";
+import { GENRES } from "../../lib/genres";
 import { showSuccess } from "../../lib/toast";
 
 /* ── extract src from <iframe> or return plain URL ── */
@@ -54,7 +56,7 @@ const EditMovie = () => {
           rating:       m.rating       ?? "",
           duration:     m.duration     ?? "",
           language:     m.language     ?? "",
-          genre:        Array.isArray(m.genre) ? m.genre.join(", ") : (m.genre ?? ""),
+          genres:       Array.isArray(m.genre) ? m.genre : [],
           releaseDate:  toDateInput(m.releaseDate),
           views:        m.views        ?? "",
           players:      m.players?.length ? m.players : [""],
@@ -126,7 +128,7 @@ const EditMovie = () => {
     if (form.language)    data.append("language",    form.language);
     if (form.releaseDate) data.append("releaseDate", form.releaseDate);
     if (form.views !== "") data.append("views",      form.views);
-    data.append("genre",         JSON.stringify(form.genre.split(",").map((g) => g.trim()).filter(Boolean)));
+    data.append("genre",         JSON.stringify(form.genres));
     data.append("players",       JSON.stringify(cleanedPlayers));
     data.append("downloadLinks", JSON.stringify(form.downloadLinks.filter((d) => d.url.trim())));
     data.append("isTopMovie",    String(isTopMovie));
@@ -244,10 +246,15 @@ const EditMovie = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="genre">Genres (comma separated)</Label>
-                  <Input id="genre" name="genre" value={form.genre} onChange={handleChange}
-                    placeholder="Action, Drama" disabled={loading} />
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Genres</Label>
+                  <GenreMultiSelect
+                    value={form.genres}
+                    onChange={(val) => setForm((prev) => ({ ...prev, genres: val }))}
+                    genres={GENRES}
+                    disabled={loading}
+                    placeholder="Select genres…"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="releaseDate">Release Date</Label>

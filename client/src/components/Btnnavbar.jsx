@@ -1,40 +1,22 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axiosbase from "../../axiosbasa";
+import { GENRES } from "../lib/genres";
 
-// These are always shown — not from DB
 const FIXED_START = ["Home"];
-const FIXED_END = ["Contact"];
+const FIXED_END   = ["Contact"];
 
 const ResponsiveMenuNavbar = ({ onFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [genres, setGenres] = useState([]);       // from backend
   const [active, setActive] = useState("Home");
   const navigate = useNavigate();
 
-  // Fetch genres from backend once on mount
-  useEffect(() => {
-    axiosbase
-      .get("movie/genres")
-      .then((res) => {
-        const data = Array.isArray(res.data)
-          ? res.data
-          : res.data?.data ?? [];
-        setGenres(data);
-      })
-      .catch(() => {
-        // If fetch fails, genres just stay empty — fixed buttons still work
-      });
-  }, []);
-
-  // Full button list: Home → [db genres] → Contact
-  const allItems = [...FIXED_START, ...genres, ...FIXED_END];
+  // Full list: Home → all genres → Contact
+  const allItems = [...FIXED_START, ...GENRES, ...FIXED_END];
 
   const handleClick = (item) => {
     setActive(item);
     setIsOpen(false);
-
     if (item === "Contact") {
       navigate("/contact");
       return;
@@ -68,7 +50,7 @@ const ResponsiveMenuNavbar = ({ onFilter }) => {
           </button>
         </div>
 
-        {/* Desktop — horizontal row */}
+        {/* Desktop — horizontal scrollable row */}
         <div className="hidden lg:flex flex-wrap gap-2">
           {allItems.map((item) => (
             <button

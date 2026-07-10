@@ -5,12 +5,35 @@ import Btnnavbar from "../components/Btnnavbar";
 import FeaturedScroller from "../components/FeaturedScroller";
 import LatestMoviesSection from "../components/LatestMoviesSection";
 import Footer from "../components/Footer";
+import useSEO from "../lib/useSEO";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 function Home() {
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [search, setSearch] = useState("");
+  const { siteName } = useSiteSettings();
+
+  useSEO({
+    title: "Watch & Download Latest Movies Online in HD",
+    description: `Browse and watch thousands of movies online for free in HD quality. Filter by genre, language, and year on ${siteName}.`,
+    url: window.location.origin + "/",
+    siteName,
+    type: "website",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: siteName,
+      url: window.location.origin,
+      description: `Watch and download movies online in HD on ${siteName}.`,
+      potentialAction: {
+        "@type": "SearchAction",
+        target: `${window.location.origin}/?search={search_term_string}`,
+        "query-input": "required name=search_term_string",
+      },
+    },
+  });
 
   useEffect(() => {
     let cancelled = false;

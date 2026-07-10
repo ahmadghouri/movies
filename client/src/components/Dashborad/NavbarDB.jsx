@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Film, LogOut, LayoutDashboard, MessageSquare, List, Reply, Navigation, Settings } from "lucide-react";
 import axiosbase from "../../../axiosbasa";
@@ -8,6 +8,15 @@ import { showSuccess } from "../../lib/toast";
 const NavbarDB = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Prevent search engines from indexing any admin page
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
+  }, []);
 
   const handleLogout = async () => {
     try {

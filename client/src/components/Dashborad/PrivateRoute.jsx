@@ -32,7 +32,7 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  return status === "auth" ? children : <Navigate to="/signin" replace />;
+  return status === "auth" ? children : <Navigate to="/" replace />;
 };
 
 export default PrivateRoute;

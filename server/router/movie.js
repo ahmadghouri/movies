@@ -19,10 +19,16 @@ const validate = require("../middleware/validate");
 
 const movieRoutes = express.Router();
 
+// Prevent search engines from indexing admin-only write endpoints
+const noIndex = (_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  next();
+};
+
 // ── Admin routes ──────────────────────────────────────────
 movieRoutes.post(
   "/create",
-  authMiddleware, adminMiddleware,
+  noIndex, authMiddleware, adminMiddleware,
   uploadLimiter, upload.single("poster"),
   movieCreateValidation, validate,
   handleCreateMovie
@@ -30,7 +36,7 @@ movieRoutes.post(
 
 movieRoutes.put(
   "/update/:id",
-  authMiddleware, adminMiddleware,
+  noIndex, authMiddleware, adminMiddleware,
   uploadLimiter, upload.single("poster"),
   movieIdValidation, movieCreateValidation, validate,
   handleUpdateMovie
@@ -38,14 +44,14 @@ movieRoutes.put(
 
 movieRoutes.delete(
   "/delete/:id",
-  authMiddleware, adminMiddleware,
+  noIndex, authMiddleware, adminMiddleware,
   apiLimiter, movieIdValidation, validate,
   handleDeleteMovie
 );
 
 movieRoutes.patch(
   "/toggle-top/:id",
-  authMiddleware, adminMiddleware,
+  noIndex, authMiddleware, adminMiddleware,
   apiLimiter, movieIdValidation, validate,
   handleToggleTopMovie
 );

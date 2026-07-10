@@ -6,6 +6,9 @@ import {
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosbase from "../../axiosbasa";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
+import useSEO from "../lib/useSEO";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -180,6 +183,7 @@ const SidebarMovies = () => {
 const MovieDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { siteName } = useSiteSettings();
   const [movie, setMovie] = useState(null);
   const [views, setViews] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -202,6 +206,50 @@ const MovieDetailPage = () => {
   const [replyText, setReplyText] = useState("");
   const [replySubmitting, setReplySubmitting] = useState(false);
   const [replyError, setReplyError] = useState("");
+
+  // ── SEO — updates as soon as movie data loads ──────────────
+  const seoDescription = movie
+    ? [
+        movie.description?.trim(),
+        movie.genre?.length ? `Genre: ${movie.genre.join(", ")}.` : "",
+        movie.language ? `Language: ${movie.language}.` : "",
+        movie.year ? `Year: ${movie.year}.` : "",
+        movie.rating != null ? `Rating: ${movie.rating}/10.` : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .slice(0, 160)
+    : "";
+
+  useSEO({
+    title: movie
+      ? `${movie.title}${movie.year ? ` (${movie.year})` : ""} — Watch Online HD`
+      : "Loading Movie…",
+    description: seoDescription,
+    image: movie?.poster || "",
+    url: `${window.location.origin}/moviedetail/${id}`,
+    type: "video.movie",
+    siteName,
+    jsonLd: movie
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Movie",
+          name: movie.title,
+          description: seoDescription,
+          image: movie.poster,
+          datePublished: movie.releaseDate
+            ? new Date(movie.releaseDate).toISOString().split("T")[0]
+            : undefined,
+          genre: movie.genre,
+          inLanguage: movie.language,
+          aggregateRating: movie.rating != null
+            ? { "@type": "AggregateRating", ratingValue: movie.rating, bestRating: 10 }
+            : undefined,
+          duration: movie.duration,
+          url: `${window.location.origin}/moviedetail/${id}`,
+        }
+      : null,
+  });
 
   const handleSearch = (term) => navigate(`/?search=${encodeURIComponent(term)}`);
 
@@ -232,9 +280,14 @@ const MovieDetailPage = () => {
 
   useEffect(() => {
     if (!id) return;
+    // Only count one view per movie per browser session — prevents
+    // the counter incrementing on every page refresh.
+    const sessionKey = `viewed_${id}`;
+    if (sessionStorage.getItem(sessionKey)) return;
+    sessionStorage.setItem(sessionKey, "1");
     axiosbase.patch(`movie/view/${id}`)
-      .then(()=>setViews(v=>(v!==null?v+1:v)))
-      .catch(()=>{});
+      .then(() => setViews(v => (v !== null ? v + 1 : v)))
+      .catch(() => {});
   }, [id]);
 
   const fetchComments = async (page=1) => {
@@ -301,14 +354,15 @@ const MovieDetailPage = () => {
 
   if (error || !movie) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-900 text-white flex flex-col">
         <Navbar setSearchh={handleSearch} />
-        <div className="flex flex-col items-center justify-center py-32 gap-4">
+        <div className="flex flex-col items-center justify-center py-32 gap-4 flex-1">
           <p className="text-gray-400 text-lg">{error||"Movie not found."}</p>
           <Button variant="outline" asChild>
             <Link to="/"><ArrowLeft className="w-4 h-4 mr-2"/>Back to Home</Link>
           </Button>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -620,6 +674,7 @@ const MovieDetailPage = () => {
           </aside>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

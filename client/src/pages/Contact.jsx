@@ -10,9 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../co
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Spinner } from "../components/ui/spinner";
 import { showSuccess } from "../lib/toast";
+import Footer from "../components/Footer";
+import useSEO from "../lib/useSEO";
+import { useSiteSettings } from "../context/SiteSettingsContext";
 
 export default function ContactForm() {
   const navigate = useNavigate();
+  const { siteName } = useSiteSettings();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,6 +26,19 @@ export default function ContactForm() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useSEO({
+    title: "Contact Us",
+    description: `Have a question or feedback? Get in touch with the ${siteName} team. We'd love to hear from you.`,
+    url: window.location.origin + "/contact",
+    siteName,
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "ContactPage",
+      name: `Contact — ${siteName}`,
+      url: window.location.origin + "/contact",
+    },
+  });
 
   const handleChange = (e) => {
     setError("");
@@ -44,8 +61,8 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 py-10 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-900 py-10 px-4 flex flex-col">
+      <div className="max-w-2xl mx-auto space-y-6 flex-1 w-full">
         {/* Back button */}
         <Button variant="ghost" asChild className="text-gray-400 hover:text-white">
           <Link to="/">
@@ -199,6 +216,7 @@ export default function ContactForm() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }

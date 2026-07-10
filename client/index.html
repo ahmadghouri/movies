@@ -3,10 +3,36 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="/src/style.css" rel="stylesheet">
-  <title>Vite + React</title>
+
+  <!-- Primary SEO (overridden per-page by useSEO hook) -->
+  <title>MovieMania — Watch & Download Movies Online</title>
+  <meta name="description" content="Watch and download the latest movies online in HD. Browse thousands of movies by genre, language, and year on MovieMania." />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#111827" />
+
+  <!-- Canonical (overridden per-page) -->
+  <link rel="canonical" href="https://yourdomain.com/" />
+
+  <!-- Open Graph defaults (overridden per-page) -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:site_name"   content="MovieMania" />
+  <meta property="og:title"       content="MovieMania — Watch & Download Movies Online" />
+  <meta property="og:description" content="Watch and download the latest movies online in HD. Browse thousands of movies by genre, language, and year on MovieMania." />
+  <meta property="og:url"         content="https://yourdomain.com/" />
+  <meta property="og:image"       content="https://yourdomain.com/og-default.jpg" />
+
+  <!-- Twitter Card defaults (overridden per-page) -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="MovieMania — Watch & Download Movies Online" />
+  <meta name="twitter:description" content="Watch and download the latest movies online in HD." />
+  <meta name="twitter:image"       content="https://yourdomain.com/og-default.jpg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+  <!-- Preconnect to Cloudinary for faster poster loads -->
+  <link rel="preconnect" href="https://res.cloudinary.com" />
 </head>
 
 <body>

@@ -32,7 +32,7 @@ const GenreMultiSelect = ({
 
   const removeOne = (genre, e) => {
     e.stopPropagation();
-    onChange(value.filter((g) => g !== genre));
+    if (!disabled) onChange(value.filter((g) => g !== genre));
   };
 
   return (
@@ -60,14 +60,23 @@ const GenreMultiSelect = ({
                   className="inline-flex items-center gap-1 rounded bg-blue-600/30 border border-blue-500/40 px-1.5 py-0.5 text-xs text-blue-200"
                 >
                   {g}
-                  <button
-                    type="button"
+                  {/* Use span instead of button to avoid nested <button> HTML error */}
+                  <span
+                    role="button"
+                    tabIndex={disabled ? -1 : 0}
                     onClick={(e) => removeOne(g, e)}
-                    className="hover:text-white text-blue-300 transition"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeOne(g, e);
+                      }
+                    }}
+                    className="hover:text-white text-blue-300 transition cursor-pointer"
                     aria-label={`Remove ${g}`}
                   >
                     <X className="w-3 h-3" />
-                  </button>
+                  </span>
                 </span>
               ))}
             </>

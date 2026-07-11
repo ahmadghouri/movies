@@ -443,7 +443,6 @@ const MovieDetailPage = () => {
                       allowFullScreen
                       className="w-full h-full border-none"
                       title={`${movie.title} — Player ${idx+1}`}
-                      allowFullScreen
                     />
                   </div>
                 </div>

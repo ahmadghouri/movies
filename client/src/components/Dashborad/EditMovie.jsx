@@ -59,6 +59,7 @@ const EditMovie = () => {
           genres:       Array.isArray(m.genre) ? m.genre : [],
           releaseDate:  toDateInput(m.releaseDate),
           views:        m.views        ?? "",
+          trailerUrl:   m.trailerUrl   ?? "",
           players:      m.players?.length ? m.players : [""],
           downloadLinks: m.downloadLinks?.length
             ? m.downloadLinks.map(d => ({
@@ -135,6 +136,7 @@ const EditMovie = () => {
     if (form.views !== "") data.append("views",      form.views);
     data.append("genre",         JSON.stringify(form.genres));
     data.append("players",       JSON.stringify(cleanedPlayers));
+    if (form.trailerUrl !== undefined) data.append("trailerUrl", extractPlayerUrl(form.trailerUrl.trim()));
     data.append("downloadLinks", JSON.stringify(form.downloadLinks.filter((d) => d.url.trim())));
     data.append("isTopMovie",    String(isTopMovie));
 
@@ -316,6 +318,29 @@ const EditMovie = () => {
                   <Input id="poster" type="file" accept="image/jpeg,image/png,image/webp,image/gif"
                     onChange={handlePosterChange} disabled={loading} className="cursor-pointer" />
                 </div>
+              </div>
+            </section>
+
+            <Separator />
+
+            {/* ── Trailer ── */}
+            <section aria-labelledby="edit-trailer">
+              <h3 id="edit-trailer" className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Movie Trailer
+              </h3>
+              <div className="space-y-2">
+                <Label htmlFor="trailerUrl">YouTube / Trailer URL</Label>
+                <Input
+                  id="trailerUrl"
+                  name="trailerUrl"
+                  value={form.trailerUrl}
+                  onChange={handleChange}
+                  placeholder="https://www.youtube.com/watch?v=... ya embed link"
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  YouTube watch link, share link, ya embed URL — sab kaam karte hain.
+                </p>
               </div>
             </section>
 

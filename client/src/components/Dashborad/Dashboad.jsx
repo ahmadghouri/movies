@@ -24,6 +24,7 @@ const INITIAL_FORM = {
   language: "",
   genres: [],
   releaseDate: "",
+  trailerUrl: "",
   players: [""],
   downloadLinks: [{ provider: "", quality: "", episode: "", url: "" }],
 };
@@ -139,6 +140,7 @@ const CreateMovieForm = () => {
     if (form.releaseDate) data.append("releaseDate", form.releaseDate);
     data.append("genre", JSON.stringify(form.genres));
     data.append("players", JSON.stringify(cleanedPlayers));
+    if (form.trailerUrl?.trim()) data.append("trailerUrl", extractPlayerUrl(form.trailerUrl.trim()));
     data.append(
       "downloadLinks",
       JSON.stringify(form.downloadLinks.filter((d) => d.url.trim()))
@@ -285,6 +287,29 @@ const CreateMovieForm = () => {
                   <Input id="poster" type="file" accept="image/jpeg,image/png,image/webp,image/gif"
                     onChange={handlePosterChange} disabled={loading} className="cursor-pointer" />
                 </div>
+              </div>
+            </section>
+
+            <Separator />
+
+            {/* ── Trailer ──────────────────────────────────── */}
+            <section aria-labelledby="trailer-heading">
+              <h3 id="trailer-heading" className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                Movie Trailer
+              </h3>
+              <div className="space-y-2">
+                <Label htmlFor="trailerUrl">YouTube / Trailer URL</Label>
+                <Input
+                  id="trailerUrl"
+                  name="trailerUrl"
+                  value={form.trailerUrl}
+                  onChange={handleChange}
+                  placeholder="https://www.youtube.com/watch?v=... ya embed link"
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  YouTube watch link, share link, ya embed URL — sab kaam karte hain.
+                </p>
               </div>
             </section>
 

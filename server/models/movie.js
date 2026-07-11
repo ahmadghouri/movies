@@ -39,6 +39,10 @@ const movieSchema = mongoose.Schema({
     index: true,
   },
   players: [String],
+  trailerUrl: {
+    type: String,
+    default: "",
+  },
   downloadLinks: [
     {
       provider: String,

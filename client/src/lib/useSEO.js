@@ -24,6 +24,9 @@ const useSEO = ({
   noIndex = false,
 }) => {
   useEffect(() => {
+    // If title is null/undefined, don't update anything yet — wait for data
+    if (title == null) return;
+
     const fullTitle = title ? `${title} | ${siteName}` : siteName;
     const canonical = url || window.location.href;
 

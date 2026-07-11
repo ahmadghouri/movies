@@ -15,6 +15,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
 import { Skeleton } from "./ui/skeleton";
 
+// ─── YouTube URL → embed URL ─────────────────────────────────────────────────
+const toYouTubeEmbed = (raw) => {
+  if (!raw) return null;
+  const url = raw.trim();
+
+  // 1. Extract src from <iframe> tag if pasted
+  const iframeSrc = url.match(/src\s*=\s*["']([^"']+)["']/i);
+  const src = iframeSrc ? iframeSrc[1].trim() : url;
+
+  try {
+    // 2. Already an embed URL — just clean it up
+    if (src.includes("youtube.com/embed/")) {
+      const videoId = src.match(/\/embed\/([a-zA-Z0-9_-]{11})/)?.[1];
+      return videoId
+        ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`
+        : null;
+    }
+
+    // 3. youtu.be/VIDEO_ID
+    const shortMatch = src.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}?rel=0&modestbranding=1`;
+
+    // 4. youtube.com/watch?v=VIDEO_ID
+    const watchMatch = src.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+    if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?rel=0&modestbranding=1`;
+  } catch (_) {}
+
+  return null;
+};
+
 // ─── Skeleton ────────────────────────────────────────────────────────────────
 const DetailSkeleton = () => (
   <div className="min-h-screen bg-gray-900 text-white">
@@ -224,7 +254,7 @@ const MovieDetailPage = () => {
   useSEO({
     title: movie
       ? `${movie.title}${movie.year ? ` (${movie.year})` : ""} — Watch Online HD`
-      : "Loading Movie…",
+      : null,   // null = keep the default site title while loading, no flash of "Loading Movie…"
     description: seoDescription,
     image: movie?.poster || "",
     url: `${window.location.origin}/moviedetail/${id}`,
@@ -266,7 +296,8 @@ const MovieDetailPage = () => {
         if (!cancelled) {
           const data = res.data?.data ?? res.data;
           setMovie(data);
-          setViews(data.views ?? 0);
+          // Initialize views from DB value directly
+          setViews(typeof data.views === "number" ? data.views : 0);
         }
       } catch (err) {
         if (!cancelled) setError(err.message);
@@ -280,13 +311,22 @@ const MovieDetailPage = () => {
 
   useEffect(() => {
     if (!id) return;
-    // Only count one view per movie per browser session — prevents
-    // the counter incrementing on every page refresh.
+
+    // Allow re-counting after 30 minutes (1800000 ms)
+    const EXPIRY_MS = 30 * 60 * 1000;
     const sessionKey = `viewed_${id}`;
-    if (sessionStorage.getItem(sessionKey)) return;
-    sessionStorage.setItem(sessionKey, "1");
+    const stored = sessionStorage.getItem(sessionKey);
+
+    if (stored) {
+      const viewedAt = parseInt(stored, 10);
+      const elapsed = Date.now() - viewedAt;
+      if (elapsed < EXPIRY_MS) return; // still within 30 min window — skip
+    }
+
+    // First visit OR 30 min has passed — count the view
+    sessionStorage.setItem(sessionKey, String(Date.now()));
     axiosbase.patch(`movie/view/${id}`)
-      .then(() => setViews(v => (v !== null ? v + 1 : v)))
+      .then(() => setViews(v => (typeof v === "number" ? v + 1 : 1)))
       .catch(() => {});
   }, [id]);
 
@@ -371,15 +411,14 @@ const MovieDetailPage = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <Navbar setSearchh={handleSearch} />
 
-      {/* Title bar */}
-      <div className="bg-black py-3 px-4 border-b border-gray-800">
+      {/* ── Title Bar ── */}
+      <div className="bg-gray-950 border-b border-gray-700 px-4 py-4">
         <div className="max-w-7xl mx-auto">
-          <Button variant="ghost" size="sm" asChild className="mb-2 text-gray-400 hover:text-white">
-            <Link to="/"><ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true"/>Back</Link>
+          <Button variant="ghost" size="sm" asChild className="mb-3 text-gray-400 hover:text-white -ml-2">
+            <Link to="/"><ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true"/>Back to Home</Link>
           </Button>
-          <h1 className="text-lg md:text-xl lg:text-2xl font-bold leading-snug">
-            {movie.title}{movie.year && ` (${movie.year})`}
-            {movie.language && ` — ${movie.language}`} Full Movie Watch Online HD
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-white leading-snug">
+            {movie.title}
           </h1>
         </div>
       </div>
@@ -487,6 +526,12 @@ const MovieDetailPage = () => {
               />
               {/* Details */}
               <dl className="flex-1 text-sm space-y-2 text-gray-300">
+                {/* Title */}
+                <div className="mb-1">
+                  <h2 className="text-white font-bold text-base md:text-lg leading-snug">
+                    {movie.title}{movie.year ? ` (${movie.year})` : ""}
+                  </h2>
+                </div>
                 {movie.genre?.length > 0 && (
                   <div>
                     <span className="text-gray-400 font-medium">Genres : </span>
@@ -531,6 +576,37 @@ const MovieDetailPage = () => {
                 )}
               </dl>
             </div>
+
+            {/* ── Trailer Section ── */}
+            {(() => {
+              const embedUrl = toYouTubeEmbed(movie.trailerUrl);
+              if (!embedUrl) return null;
+              return (
+                <div className="border border-gray-700 rounded overflow-hidden">
+                  <div className="bg-red-700 px-4 py-2 flex items-center gap-2">
+                    {/* YouTube play icon */}
+                    <svg className="w-5 h-5 text-white shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8z"/>
+                      <polygon fill="#ff0000" points="0,0 0,0 0,0"/>
+                      <path d="M9.75 15.02V8.98L15.5 12l-5.75 3.02z" fill="white"/>
+                    </svg>
+                    <span className="text-white font-bold text-sm uppercase tracking-wide">
+                      Official Trailer — {movie.title}
+                    </span>
+                  </div>
+                  <div className="aspect-video bg-black">
+                    <iframe
+                      src={embedUrl}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full border-none"
+                      title={`${movie.title} — Official Trailer`}
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ── Comments Section ── */}
             <section aria-label="Comments" className="mt-4">

@@ -69,6 +69,7 @@ const handleCreateMovie = async (req, res, next) => {
       views: req.body.views ? Number(req.body.views) : 0,
       isTopMovie: req.body.isTopMovie === "true" || req.body.isTopMovie === true,
       players: safePlayers,
+      trailerUrl: req.body.trailerUrl?.trim() || "",
       downloadLinks: safeDownloadLinks,
       poster: result.secure_url,
     });
@@ -253,6 +254,9 @@ const handleUpdateMovie = async (req, res, next) => {
         isTopMovie:    req.body.isTopMovie !== undefined
                          ? (req.body.isTopMovie === "true" || req.body.isTopMovie === true)
                          : movie.isTopMovie,
+        trailerUrl:    req.body.trailerUrl !== undefined
+                         ? req.body.trailerUrl.trim()
+                         : movie.trailerUrl,
         genre,
         players:       players.filter((p) => typeof p === "string" && p.trim()),
         downloadLinks: downloadLinks.filter((d) => d && typeof d === "object" && d.url),

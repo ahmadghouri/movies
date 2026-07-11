@@ -1,23 +1,30 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axiosbase from "../../axiosbasa";
 
-const SiteSettingsContext = createContext({ siteName: "PakMovie" });
+const SiteSettingsContext = createContext({
+  siteName: "PakMovie",
+  socialLinks: [],
+  setSiteName: () => {},
+  setSocialLinks: () => {},
+});
 
 export const SiteSettingsProvider = ({ children }) => {
   const [siteName, setSiteName] = useState("PakMovie");
+  const [socialLinks, setSocialLinks] = useState([]);
 
   useEffect(() => {
     axiosbase
       .get("/site-settings")
       .then((res) => {
-        const name = res.data?.data?.siteName;
-        if (name) setSiteName(name);
+        const data = res.data?.data;
+        if (data?.siteName)    setSiteName(data.siteName);
+        if (data?.socialLinks) setSocialLinks(data.socialLinks);
       })
-      .catch(() => {}); // fallback to default
+      .catch(() => {});
   }, []);
 
   return (
-    <SiteSettingsContext.Provider value={{ siteName, setSiteName }}>
+    <SiteSettingsContext.Provider value={{ siteName, setSiteName, socialLinks, setSocialLinks }}>
       {children}
     </SiteSettingsContext.Provider>
   );

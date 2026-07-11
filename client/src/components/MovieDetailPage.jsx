@@ -6,7 +6,6 @@ import {
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosbase from "../../axiosbasa";
 import Navbar from "./Navbar";
-import Footer from "./Footer";
 import SharePopup from "./SharePopup";
 import useSEO from "../lib/useSEO";
 import { useSiteSettings } from "../context/SiteSettingsContext";
@@ -415,7 +414,6 @@ const MovieDetailPage = () => {
             <Link to="/"><ArrowLeft className="w-4 h-4 mr-2"/>Back to Home</Link>
           </Button>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -773,7 +771,6 @@ const MovieDetailPage = () => {
           </aside>
         </div>
       </div>
-      <Footer />
       {showShare && (
         <SharePopup movie={movie} onClose={() => setShowShare(false)} />
       )}

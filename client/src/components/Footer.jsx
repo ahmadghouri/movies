@@ -1,22 +1,153 @@
 import React from "react";
 import { useSiteSettings } from "../context/SiteSettingsContext";
 
+// ── SVG icons per platform ────────────────────────────────────────────────────
+const PlatformIcon = ({ platform, className = "w-5 h-5" }) => {
+  switch (platform) {
+    case "telegram":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.19 13.9l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.958.659z" />
+        </svg>
+      );
+    case "facebook":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.791-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
+        </svg>
+      );
+    case "tiktok":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z" />
+        </svg>
+      );
+    case "whatsapp":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.852L.057 23.571a.75.75 0 0 0 .921.921l5.733-1.47A11.942 11.942 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+        </svg>
+      );
+    case "youtube":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8z" />
+          <path d="M9.75 15.02V8.98L15.5 12l-5.75 3.02z" fill="white" />
+        </svg>
+      );
+    case "instagram":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
+        </svg>
+      );
+    case "twitter":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      );
+    case "discord":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.033.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+        </svg>
+      );
+    case "pinterest":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z" />
+        </svg>
+      );
+    case "snapchat":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+          <path d="M12.017 0C8.396 0 5.514 2.814 5.514 6.363c0 .307.024.607.067.9-.444.196-.846.3-1.195.3-.315 0-.614-.076-.9-.228a.48.48 0 0 0-.226-.057c-.284 0-.511.228-.511.51 0 .21.128.394.316.473.065.027 1.6.636 1.97 2.043-.044.018-.09.03-.135.044-.477.152-.968.309-.968.824 0 .394.295.676.711.676.12 0 .247-.022.384-.067.285-.093.56-.14.815-.14.247 0 .468.044.654.13-.324 2.13-1.97 2.9-2.834 3.107-.262.065-.44.3-.44.57 0 .078.017.154.05.225.212.457 1.04.772 2.464.937.08.387.24.914.587.914.145 0 .295-.047.463-.143.51-.29 1.004-.438 1.468-.438.41 0 .782.118 1.104.35.6.43 1.245.648 1.919.648.667 0 1.314-.218 1.921-.648.323-.232.694-.35 1.104-.35.464 0 .958.148 1.468.438.168.096.318.143.463.143.347 0 .507-.527.587-.914 1.424-.165 2.252-.48 2.464-.937a.574.574 0 0 0 .05-.225c0-.27-.178-.505-.44-.57-.864-.207-2.51-.977-2.834-3.107.186-.086.407-.13.654-.13.255 0 .53.047.815.14.137.045.264.067.384.067.416 0 .711-.282.711-.676 0-.515-.491-.672-.968-.824a2.25 2.25 0 0 1-.135-.044c.37-1.407 1.905-2.016 1.97-2.043.188-.079.316-.263.316-.473 0-.282-.227-.51-.511-.51a.48.48 0 0 0-.226.057c-.286.152-.585.228-.9.228-.349 0-.751-.104-1.195-.3.043-.293.067-.593.067-.9C18.503 2.814 15.638 0 12.017 0z" />
+        </svg>
+      );
+    case "website":
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="2" y1="12" x2="22" y2="12" />
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+      );
+  }
+};
+
+// ── Platform color on hover ───────────────────────────────────────────────────
+const platformColor = (platform) => {
+  const map = {
+    telegram:  "hover:text-[#229ED9] hover:bg-[#229ED9]/10",
+    facebook:  "hover:text-[#1877F2] hover:bg-[#1877F2]/10",
+    tiktok:    "hover:text-white     hover:bg-white/10",
+    whatsapp:  "hover:text-[#25D366] hover:bg-[#25D366]/10",
+    youtube:   "hover:text-[#FF0000] hover:bg-[#FF0000]/10",
+    instagram: "hover:text-[#E1306C] hover:bg-[#E1306C]/10",
+    twitter:   "hover:text-white     hover:bg-white/10",
+    discord:   "hover:text-[#5865F2] hover:bg-[#5865F2]/10",
+    pinterest: "hover:text-[#E60023] hover:bg-[#E60023]/10",
+    snapchat:  "hover:text-[#FFFC00] hover:bg-[#FFFC00]/10",
+    website:   "hover:text-blue-400  hover:bg-blue-400/10",
+    other:     "hover:text-gray-300  hover:bg-gray-700",
+  };
+  return map[platform] ?? map.other;
+};
+
+// ── Footer ────────────────────────────────────────────────────────────────────
 const Footer = () => {
   const year = new Date().getFullYear();
-  const { siteName } = useSiteSettings();
+  const { siteName, socialLinks } = useSiteSettings();
+
+  const activeLinks = [...(socialLinks || [])]
+    .filter((l) => l.isActive)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (
     <footer className="bg-gray-900 border-t border-gray-800 text-gray-400">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs">
-        <p>
-          &copy; {year}{" "}
-          <span className="text-white font-medium">{siteName}</span>. All
-          rights reserved.
-        </p>
-        <p className="text-gray-600">
-          Disclaimer: This site does not store any files on its server. All
-          contents are provided by non-affiliated third parties.
-        </p>
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
+
+        {/* Social icons row */}
+        {activeLinks.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {activeLinks.map((link) => (
+              <a
+                key={link._id ?? link.platform}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={link.label || link.platform}
+                aria-label={link.label || link.platform}
+                className={`flex items-center gap-1.5 text-gray-400 border border-gray-700 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 ${platformColor(link.platform)}`}
+              >
+                <PlatformIcon platform={link.platform} className="w-4 h-4 shrink-0" />
+                <span className="capitalize">
+                  {link.label || link.platform}
+                </span>
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Copyright + disclaimer */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs border-t border-gray-800 pt-4">
+          <p>
+            &copy; {year}{" "}
+            <span className="text-white font-medium">{siteName}</span>. All rights reserved.
+          </p>
+          <p className="text-gray-600 text-center sm:text-right max-w-sm">
+            Disclaimer: This site does not store any files on its server. All
+            contents are provided by non-affiliated third parties.
+          </p>
+        </div>
       </div>
     </footer>
   );

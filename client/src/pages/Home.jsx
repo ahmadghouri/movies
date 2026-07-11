@@ -4,7 +4,6 @@ import Navbar from "../components/Navbar";
 import Btnnavbar from "../components/Btnnavbar";
 import FeaturedScroller from "../components/FeaturedScroller";
 import LatestMoviesSection from "../components/LatestMoviesSection";
-import Footer from "../components/Footer";
 import useSEO from "../lib/useSEO";
 import { useSiteSettings } from "../context/SiteSettingsContext";
 
@@ -67,7 +66,6 @@ function Home() {
         resData={movies}
         loading={loading}
       />
-      <Footer />
     </div>
   );
 }

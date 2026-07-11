@@ -17,7 +17,7 @@ function Home() {
 
   useSEO({
     title: "Watch & Download Latest Movies Online in HD",
-    description: `Browse and watch thousands of movies online for free in HD quality. Filter by genre, language, and year on ${siteName}.`,
+    description: `Browse and watch the latest Pakistani, Bollywood and Hollywood movies online for free in HD quality on ${siteName}.`,
     url: window.location.origin + "/",
     siteName,
     type: "website",
@@ -44,7 +44,12 @@ function Home() {
           const data = Array.isArray(res.data)
             ? res.data
             : res.data?.data ?? [];
-          setMovies(data);
+          // Latest movies pehle, phir baaki (by _id desc)
+          const sorted = [
+            ...data.filter((m) => m.isLatestMovie),
+            ...data.filter((m) => !m.isLatestMovie),
+          ];
+          setMovies(sorted);
         }
       } catch (error) {
         console.error("Failed to fetch movies:", error.message);

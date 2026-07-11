@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { buildMovieUrl } from "../lib/movieUrl";
 
-const MovieCard = ({ title, image, id, views, year, language }) => {
+const MovieCard = ({ title, image, id, slug, views, year, language, isLatestMovie }) => {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
-  // Build the SEO-style title shown on card  e.g. "Ikka (2026) Hindi Full Movie Watch Onlin..."
+  const movieUrl = buildMovieUrl({ _id: id, slug, title, language });
+
+  // Build the SEO-style title shown on card
   const displayTitle = [
     title,
     year ? `(${year})` : "",
@@ -17,7 +20,7 @@ const MovieCard = ({ title, image, id, views, year, language }) => {
 
   return (
     <article
-      onClick={() => navigate(`/moviedetail/${id}`)}
+      onClick={() => navigate(movieUrl)}
       className="cursor-pointer group rounded-lg overflow-hidden
                  bg-[#1a6b78] hover:bg-[#1d7a89]
                  border border-[#1d7a89] hover:border-[#24909f]
@@ -26,7 +29,7 @@ const MovieCard = ({ title, image, id, views, year, language }) => {
                  shadow-md hover:shadow-lg hover:shadow-cyan-900/30"
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && navigate(`/moviedetail/${id}`)}
+      onKeyDown={(e) => e.key === "Enter" && navigate(movieUrl)}
       aria-label={`Watch ${title}`}
     >
       {/* ── Title bar ── */}
@@ -37,7 +40,12 @@ const MovieCard = ({ title, image, id, views, year, language }) => {
       </div>
 
       {/* ── Poster image ── */}
-      <div className="mx-2 overflow-hidden rounded">
+      <div className="mx-2 overflow-hidden rounded relative">
+        {isLatestMovie && (
+          <span className="absolute top-1.5 left-1.5 z-10 bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide shadow">
+            Latest
+          </span>
+        )}
         {imgError ? (
           <div className="aspect-[3/4] w-full bg-[#145560] flex items-center justify-center">
             <span className="text-cyan-200 text-xs text-center px-2">{title}</span>

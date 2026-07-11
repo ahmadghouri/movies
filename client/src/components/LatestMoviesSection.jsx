@@ -109,9 +109,11 @@ const LatestMoviesSection = ({ filer, search, resData, loading }) => {
                   title={movie.title}
                   image={movie.poster}
                   id={movie._id}
+                  slug={movie.slug}
                   views={movie.views}
                   year={movie.year}
                   language={movie.language}
+                  isLatestMovie={!!movie.isLatestMovie}
                 />
               ))}
             </div>

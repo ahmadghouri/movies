@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axiosbase from "../../axiosbasa";
 
-const SiteSettingsContext = createContext({ siteName: "MovieMania" });
+const SiteSettingsContext = createContext({ siteName: "PakMovie" });
 
 export const SiteSettingsProvider = ({ children }) => {
-  const [siteName, setSiteName] = useState("MovieMania");
+  const [siteName, setSiteName] = useState("PakMovie");
 
   useEffect(() => {
     axiosbase

@@ -1,20 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Static sitemap for core pages.
-  Movie detail pages are dynamic — generate a full sitemap server-side
-  or via a build script using your movie list from the API.
-  Replace https://yourdomain.com with your actual domain.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   <url>
-    <loc>https://yourdomain.com/</loc>
+    <loc>https://pakmovie.online/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://yourdomain.com/contact</loc>
+    <loc>https://pakmovie.online/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

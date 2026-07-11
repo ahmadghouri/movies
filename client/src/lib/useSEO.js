@@ -103,7 +103,7 @@ const useSEO = ({
 
     // ── Cleanup on unmount ────────────────────────────────────
     return () => {
-      document.title = siteName;
+      document.title = siteName || "PakMovie";
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, description, image, url, type, siteName, noIndex, JSON.stringify(jsonLd)]);

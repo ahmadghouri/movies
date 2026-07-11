@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, TrendingUp } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import axiosbase from "../../axiosbasa";
+import { buildMovieUrl } from "../lib/movieUrl";
 
 /* ─── Single poster card ──────────────────────────────────── */
 const PosterCard = ({ movie }) => {
@@ -11,7 +12,7 @@ const PosterCard = ({ movie }) => {
 
   return (
     <button
-      onClick={() => navigate(`/moviedetail/${movie._id}`)}
+      onClick={() => navigate(buildMovieUrl(movie))}
       className="relative flex-shrink-0 w-[130px] sm:w-[150px] md:w-[170px] group
                  focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded-lg"
       aria-label={`Watch ${movie.title}`}

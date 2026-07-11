@@ -1,14 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Star, Calendar, Clock, Globe, Eye, ArrowLeft, Download,
-  MessageSquare, Send, User, CornerDownRight, ShieldCheck,
+  MessageSquare, Send, User, CornerDownRight, ShieldCheck, Share2,
 } from "lucide-react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import axiosbase from "../../axiosbasa";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import SharePopup from "./SharePopup";
 import useSEO from "../lib/useSEO";
 import { useSiteSettings } from "../context/SiteSettingsContext";
+import { buildMovieUrl, extractSlug } from "../lib/movieUrl";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -140,7 +142,7 @@ const SidebarMovies = () => {
           : list.map(m=>(
               <Link
                 key={m._id}
-                to={`/moviedetail/${m._id}`}
+                to={buildMovieUrl(m)}
                 className="flex gap-2 p-2 bg-blue-900/30 hover:bg-blue-800/50 transition-colors"
               >
                 <img
@@ -183,7 +185,7 @@ const SidebarMovies = () => {
             : topMovies.map(m=>(
                 <Link
                   key={m._id}
-                  to={`/moviedetail/${m._id}`}
+                  to={buildMovieUrl(m)}
                   className="flex gap-2 p-2 bg-gray-800 hover:bg-gray-700 transition-colors"
                 >
                   <img
@@ -211,13 +213,15 @@ const SidebarMovies = () => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const MovieDetailPage = () => {
-  const { id } = useParams();
+  const { id, prettySlug } = useParams();   // one of these will be defined
+  const slug = prettySlug ? extractSlug(prettySlug) : null;
   const navigate = useNavigate();
   const { siteName } = useSiteSettings();
   const [movie, setMovie] = useState(null);
   const [views, setViews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showShare, setShowShare] = useState(false);
 
   // comments
   const [comments, setComments] = useState([]);
@@ -257,7 +261,9 @@ const MovieDetailPage = () => {
       : null,   // null = keep the default site title while loading, no flash of "Loading Movie…"
     description: seoDescription,
     image: movie?.poster || "",
-    url: `${window.location.origin}/moviedetail/${id}`,
+    url: movie
+      ? `${window.location.origin}${buildMovieUrl(movie)}`
+      : undefined,
     type: "video.movie",
     siteName,
     jsonLd: movie
@@ -276,7 +282,7 @@ const MovieDetailPage = () => {
             ? { "@type": "AggregateRating", ratingValue: movie.rating, bestRating: 10 }
             : undefined,
           duration: movie.duration,
-          url: `${window.location.origin}/moviedetail/${id}`,
+          url: `${window.location.origin}${buildMovieUrl(movie)}`,
         }
       : null,
   });
@@ -291,13 +297,25 @@ const MovieDetailPage = () => {
     let cancelled = false;
     const fetchMovie = async () => {
       setLoading(true);
+      setError("");
       try {
-        const res = await axiosbase.get(`movie/getmovie/${id}`);
+        // Slug route → /api/movie/slug/:slug
+        // Id route   → /api/movie/getmovie/:id
+        const url = slug
+          ? `movie/slug/${slug}`
+          : `movie/getmovie/${id}`;
+        const res = await axiosbase.get(url);
         if (!cancelled) {
           const data = res.data?.data ?? res.data;
           setMovie(data);
-          // Initialize views from DB value directly
           setViews(typeof data.views === "number" ? data.views : 0);
+
+          // If opened via old /moviedetail/:id URL and movie has a slug,
+          // silently redirect to the pretty URL (replace so back button works)
+          if (id && data.slug) {
+            const prettyUrl = buildMovieUrl(data);
+            navigate(prettyUrl, { replace: true });
+          }
         }
       } catch (err) {
         if (!cancelled) setError(err.message);
@@ -307,28 +325,23 @@ const MovieDetailPage = () => {
     };
     fetchMovie();
     return () => { cancelled = true; };
-  }, [id]);
+  }, [id, slug]);
 
   useEffect(() => {
-    if (!id) return;
-
+    if (!movie?._id) return;
     // Allow re-counting after 30 minutes (1800000 ms)
     const EXPIRY_MS = 30 * 60 * 1000;
-    const sessionKey = `viewed_${id}`;
+    const sessionKey = `viewed_${movie._id}`;
     const stored = sessionStorage.getItem(sessionKey);
-
     if (stored) {
-      const viewedAt = parseInt(stored, 10);
-      const elapsed = Date.now() - viewedAt;
-      if (elapsed < EXPIRY_MS) return; // still within 30 min window — skip
+      const elapsed = Date.now() - parseInt(stored, 10);
+      if (elapsed < EXPIRY_MS) return;
     }
-
-    // First visit OR 30 min has passed — count the view
     sessionStorage.setItem(sessionKey, String(Date.now()));
-    axiosbase.patch(`movie/view/${id}`)
+    axiosbase.patch(`movie/view/${movie._id}`)
       .then(() => setViews(v => (typeof v === "number" ? v + 1 : 1)))
       .catch(() => {});
-  }, [id]);
+  }, [movie?._id]);
 
   const fetchComments = async (page=1) => {
     setCommentsLoading(true);
@@ -414,9 +427,20 @@ const MovieDetailPage = () => {
       {/* ── Title Bar ── */}
       <div className="bg-gray-950 border-b border-gray-700 px-4 py-4">
         <div className="max-w-7xl mx-auto">
-          <Button variant="ghost" size="sm" asChild className="mb-3 text-gray-400 hover:text-white -ml-2">
-            <Link to="/"><ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true"/>Back to Home</Link>
-          </Button>
+          <div className="flex items-center justify-between gap-3">
+            <Button variant="ghost" size="sm" asChild className="mb-3 text-gray-400 hover:text-white -ml-2">
+              <Link to="/"><ArrowLeft className="w-4 h-4 mr-1.5" aria-hidden="true"/>Back to Home</Link>
+            </Button>
+            {/* Share button */}
+            <button
+              onClick={() => setShowShare(true)}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-3 py-1.5 rounded-lg transition shrink-0"
+              aria-label="Share this movie"
+            >
+              <Share2 className="w-4 h-4" aria-hidden="true" />
+              Share
+            </button>
+          </div>
           <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-white leading-snug">
             {movie.title}
           </h1>
@@ -750,6 +774,9 @@ const MovieDetailPage = () => {
         </div>
       </div>
       <Footer />
+      {showShare && (
+        <SharePopup movie={movie} onClose={() => setShowShare(false)} />
+      )}
     </div>
   );
 };

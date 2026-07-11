@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin-db/
 Disallow: /signin
 
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://pakmovie.online/sitemap.xml

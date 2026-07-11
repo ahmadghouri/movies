@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosbase from "../../../axiosbasa";
-import { Pencil, Trash2, Film, Search, AlertTriangle, TrendingUp } from "lucide-react";
+import { Pencil, Trash2, Film, Search, AlertTriangle, TrendingUp, Sparkles } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card, CardContent } from "../ui/card";
@@ -86,7 +86,8 @@ const MovieList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [toDelete, setToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [togglingId, setTogglingId] = useState(null); // track which movie is toggling
+  const [togglingId, setTogglingId] = useState(null);      // top toggle
+  const [togglingLatestId, setTogglingLatestId] = useState(null); // latest toggle
 
   const fetchMovies = useCallback(async () => {
     setLoading(true);
@@ -140,6 +141,26 @@ const MovieList = () => {
     }
   };
 
+  const handleToggleLatest = async (movie) => {
+    setTogglingLatestId(movie._id);
+    try {
+      const res = await axiosbase.patch(`movie/toggle-latest/${movie._id}`);
+      const { isLatestMovie } = res.data.data;
+      setMovies((prev) =>
+        prev.map((m) => (m._id === movie._id ? { ...m, isLatestMovie } : m))
+      );
+      showSuccess(
+        isLatestMovie
+          ? `"${movie.title}" marked as Latest.`
+          : `"${movie.title}" removed from Latest.`
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTogglingLatestId(null);
+    }
+  };
+
   const filtered = movies.filter((m) =>
     m.title.toLowerCase().includes(search.toLowerCase())
   );
@@ -168,7 +189,11 @@ const MovieList = () => {
           <p className="text-sm text-gray-400">
             {movies.length} total ·{" "}
             <span className="text-yellow-400">
-              {movies.filter((m) => m.isTopMovie).length} in Top Movies
+              {movies.filter((m) => m.isTopMovie).length} Top
+            </span>
+            {" · "}
+            <span className="text-green-400">
+              {movies.filter((m) => m.isLatestMovie).length} Latest
             </span>
           </p>
         </div>
@@ -237,7 +262,7 @@ const MovieList = () => {
                 </div>
 
                 {/* Top Movie Toggle */}
-                <div className="flex flex-col items-center gap-1 flex-shrink-0 min-w-[56px]">
+                <div className="flex flex-col items-center gap-1 flex-shrink-0 min-w-[48px]">
                   <Switch
                     id={`top-${movie._id}`}
                     checked={!!movie.isTopMovie}
@@ -251,7 +276,26 @@ const MovieList = () => {
                       movie.isTopMovie ? "text-yellow-400" : "text-gray-500"
                     }`}
                   >
-                    {movie.isTopMovie ? "Top" : "Top"}
+                    Top
+                  </label>
+                </div>
+
+                {/* Latest Movie Toggle */}
+                <div className="flex flex-col items-center gap-1 flex-shrink-0 min-w-[48px]">
+                  <Switch
+                    id={`latest-${movie._id}`}
+                    checked={!!movie.isLatestMovie}
+                    onCheckedChange={() => handleToggleLatest(movie)}
+                    disabled={togglingLatestId === movie._id}
+                    aria-label={`Toggle Latest Movie: ${movie.title}`}
+                  />
+                  <label
+                    htmlFor={`latest-${movie._id}`}
+                    className={`text-[10px] font-semibold cursor-pointer select-none ${
+                      movie.isLatestMovie ? "text-green-400" : "text-gray-500"
+                    }`}
+                  >
+                    Latest
                   </label>
                 </div>
 

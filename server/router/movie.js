@@ -3,10 +3,12 @@ const {
   handleCreateMovie,
   handleGetMovie,
   handleMovieDetail,
+  handleMovieBySlug,
   handleIncrementView,
   handleGetGenres,
   handleGetTopMovies,
   handleToggleTopMovie,
+  handleToggleLatestMovie,
   handleUpdateMovie,
   handleDeleteMovie,
 } = require("../controller/movie.controller");
@@ -19,7 +21,7 @@ const validate = require("../middleware/validate");
 
 const movieRoutes = express.Router();
 
-// Prevent search engines from indexing admin-only write endpoints
+// Prevent search engines from indexing admin endpoints
 const noIndex = (_req, res, next) => {
   res.setHeader("X-Robots-Tag", "noindex, nofollow");
   next();
@@ -56,11 +58,19 @@ movieRoutes.patch(
   handleToggleTopMovie
 );
 
+movieRoutes.patch(
+  "/toggle-latest/:id",
+  noIndex, authMiddleware, adminMiddleware,
+  apiLimiter, movieIdValidation, validate,
+  handleToggleLatestMovie
+);
+
 // ── Public routes ─────────────────────────────────────────
-movieRoutes.get("/genres",        publicLimiter, handleGetGenres);
-movieRoutes.get("/top",           publicLimiter, handleGetTopMovies);
-movieRoutes.get("/getmovie",      publicLimiter, handleGetMovie);
-movieRoutes.get("/getmovie/:id",  publicLimiter, movieIdValidation, validate, handleMovieDetail);
-movieRoutes.patch("/view/:id",    publicLimiter, movieIdValidation, validate, handleIncrementView);
+movieRoutes.get("/genres",          publicLimiter, handleGetGenres);
+movieRoutes.get("/top",             publicLimiter, handleGetTopMovies);
+movieRoutes.get("/getmovie",        publicLimiter, handleGetMovie);
+movieRoutes.get("/getmovie/:id",    publicLimiter, movieIdValidation, validate, handleMovieDetail);
+movieRoutes.get("/slug/:slug",      publicLimiter, handleMovieBySlug);
+movieRoutes.patch("/view/:id",      publicLimiter, movieIdValidation, validate, handleIncrementView);
 
 module.exports = movieRoutes;

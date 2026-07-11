@@ -18,7 +18,10 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/signin" element={<Signin />} />
+      {/* Legacy route — MongoDB _id based (backward compat) */}
       <Route path="/moviedetail/:id" element={<MovieDetail />} />
+      {/* Pretty shareable URL: /movie/title-language-slug */}
+      <Route path="/movie/:prettySlug" element={<MovieDetail />} />
       <Route path="/contact" element={<ContactForm />} />
       <Route
         path="/admin-db"

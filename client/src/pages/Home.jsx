@@ -44,12 +44,7 @@ function Home() {
           const data = Array.isArray(res.data)
             ? res.data
             : res.data?.data ?? [];
-          // Latest movies pehle, phir baaki (by _id desc)
-          const sorted = [
-            ...data.filter((m) => m.isLatestMovie),
-            ...data.filter((m) => !m.isLatestMovie),
-          ];
-          setMovies(sorted);
+          setMovies(data);
         }
       } catch (error) {
         console.error("Failed to fetch movies:", error.message);

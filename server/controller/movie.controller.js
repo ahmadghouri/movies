@@ -175,11 +175,21 @@ const handleToggleLatestMovie = async (req, res, next) => {
     const movie = await Movies.findById(req.params.id);
     if (!movie) return res.status(404).json({ success: false, message: "Movie not found." });
     movie.isLatestMovie = !movie.isLatestMovie;
+    if (movie.isLatestMovie) {
+      // Assign next order number so first toggled = position 1, second = 2, etc.
+      const maxDoc = await Movies.findOne({ isLatestMovie: true })
+        .sort({ latestOrder: -1 })
+        .select("latestOrder")
+        .lean();
+      movie.latestOrder = (maxDoc?.latestOrder ?? 0) + 1;
+    } else {
+      movie.latestOrder = 0;
+    }
     await movie.save();
     return res.status(200).json({
       success: true,
       message: `Movie ${movie.isLatestMovie ? "marked as" : "removed from"} Latest Movies.`,
-      data: { _id: movie._id, isLatestMovie: movie.isLatestMovie },
+      data: { _id: movie._id, isLatestMovie: movie.isLatestMovie, latestOrder: movie.latestOrder },
     });
   } catch (error) {
     next(error);

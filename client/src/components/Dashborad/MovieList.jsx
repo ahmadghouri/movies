@@ -145,13 +145,13 @@ const MovieList = () => {
     setTogglingLatestId(movie._id);
     try {
       const res = await axiosbase.patch(`movie/toggle-latest/${movie._id}`);
-      const { isLatestMovie } = res.data.data;
+      const { isLatestMovie, latestOrder } = res.data.data;
       setMovies((prev) =>
-        prev.map((m) => (m._id === movie._id ? { ...m, isLatestMovie } : m))
+        prev.map((m) => (m._id === movie._id ? { ...m, isLatestMovie, latestOrder } : m))
       );
       showSuccess(
         isLatestMovie
-          ? `"${movie.title}" marked as Latest.`
+          ? `"${movie.title}" marked as Latest #${latestOrder}.`
           : `"${movie.title}" removed from Latest.`
       );
     } catch (err) {
@@ -295,7 +295,9 @@ const MovieList = () => {
                       movie.isLatestMovie ? "text-green-400" : "text-gray-500"
                     }`}
                   >
-                    Latest
+                    {movie.isLatestMovie && movie.latestOrder
+                      ? `#${movie.latestOrder}`
+                      : "Latest"}
                   </label>
                 </div>
 

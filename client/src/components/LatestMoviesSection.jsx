@@ -21,6 +21,30 @@ const MovieSkeleton = () => (
   </div>
 );
 
+/**
+ * Smart filter — checks genre, year, language, and title
+ * so navbar filterValues like "2026", "Hindi", "Action" all work.
+ */
+const matchesFilter = (movie, filterValue) => {
+  if (!filterValue || filterValue === "Home") return true;
+  const val = filterValue.toLowerCase().trim();
+
+  // genre match
+  if (Array.isArray(movie.genre)) {
+    if (movie.genre.some((g) => g.toLowerCase().includes(val))) return true;
+  } else if (typeof movie.genre === "string") {
+    if (movie.genre.toLowerCase().includes(val)) return true;
+  }
+
+  // year match  e.g. filterValue = "2026"
+  if (movie.year && movie.year.toString().toLowerCase().includes(val)) return true;
+
+  // language match  e.g. filterValue = "Hindi"
+  if (movie.language && movie.language.toLowerCase().includes(val)) return true;
+
+  return false;
+};
+
 const LatestMoviesSection = ({ filer, search, resData, loading }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -31,21 +55,28 @@ const LatestMoviesSection = ({ filer, search, resData, loading }) => {
 
   let filtered = resData || [];
 
+  // Apply smart filter
   if (filer && filer !== "Home") {
-    filtered = filtered.filter((movie) =>
-      Array.isArray(movie.genre)
-        ? movie.genre.some((g) => g.toLowerCase().includes(filer.toLowerCase()))
-        : typeof movie.genre === "string"
-        ? movie.genre.toLowerCase().includes(filer.toLowerCase())
-        : false
-    );
+    filtered = filtered.filter((movie) => matchesFilter(movie, filer));
   }
 
+  // Apply search
   if (search) {
     filtered = filtered.filter((movie) =>
       movie.title.toLowerCase().includes(search.toLowerCase())
     );
   }
+
+  // Sort: isLatestMovie by latestOrder asc (1 pehle, 2 doosra...), phir baaki by _id desc
+  filtered = [...filtered].sort((a, b) => {
+    const aLatest = a.isLatestMovie ? (a.latestOrder ?? 999999) : null;
+    const bLatest = b.isLatestMovie ? (b.latestOrder ?? 999999) : null;
+
+    if (aLatest !== null && bLatest !== null) return aLatest - bLatest; // both latest: by order
+    if (aLatest !== null) return -1;   // a is latest, b is not → a first
+    if (bLatest !== null) return 1;    // b is latest, a is not → b first
+    return 0;                          // neither latest: keep original order
+  });
 
   const totalPages = Math.ceil(filtered.length / MOVIES_PER_PAGE);
   const paginated  = filtered.slice(
@@ -55,7 +86,6 @@ const LatestMoviesSection = ({ filer, search, resData, loading }) => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    // Scroll to top of section smoothly
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -88,20 +118,18 @@ const LatestMoviesSection = ({ filer, search, resData, loading }) => {
           </div>
 
         ) : paginated.length === 0 ? (
-          /* ── Empty state ── */
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <Film className="w-16 h-16 text-gray-700 mb-4" aria-hidden="true" />
             <p className="text-gray-400 text-lg font-medium">No movies found</p>
             {(search || (filer && filer !== "Home")) && (
               <p className="text-gray-500 text-sm mt-1">
-                Try a different search term or genre.
+                Try a different search term or filter.
               </p>
             )}
           </div>
 
         ) : (
           <>
-            {/* ── Movie grid ── */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {paginated.map((movie) => (
                 <MovieCard
@@ -118,7 +146,6 @@ const LatestMoviesSection = ({ filer, search, resData, loading }) => {
               ))}
             </div>
 
-            {/* ── Shadcn Pagination ── */}
             <PaginationBar
               currentPage={currentPage}
               totalPages={totalPages}

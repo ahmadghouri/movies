@@ -50,6 +50,11 @@ const movieSchema = mongoose.Schema({
     default: false,
     index: true,
   },
+  latestOrder: {
+    type: Number,
+    default: 0,
+    index: true,
+  },
   players: [String],
   trailerUrl: {
     type: String,

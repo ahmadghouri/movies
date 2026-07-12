@@ -29,6 +29,7 @@ const contectRouter = require("./router/contect");
 const navbarMenuRouter = require("./router/navbarMenu");
 const siteSettingsRouter = require("./router/siteSettings");
 const healthRouter = require("./router/health");
+const shortLinkRouter = require("./router/shortLink");
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -79,6 +80,8 @@ app.use("/api/movie/:id/comments", commentRouter);
 app.use("/api", contectRouter);
 app.use("/api", navbarMenuRouter);
 app.use("/api", siteSettingsRouter);
+// Short link routes: POST /api/shorten  and  GET /s/:code
+app.use("/", shortLinkRouter);
 
 // ── 404 handler ───────────────────────────────────────────
 app.use((_req, res) => {

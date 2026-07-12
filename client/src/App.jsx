@@ -11,8 +11,10 @@ import AdminContactList from "./components/Dashborad/AdminContactList";
 import AdminComments from "./components/Dashborad/AdminComments";
 import AdminNavbarMenu from "./components/Dashborad/AdminNavbarMenu";
 import AdminSiteSettings from "./components/Dashborad/AdminSiteSettings";
+import AdminShortLinks from "./components/Dashborad/AdminShortLinks";
 import PrivateRoute from "./components/Dashborad/PrivateRoute";
 import Footer from "./components/Footer";
+import NotFound from "./pages/NotFound";
 
 /**
  * PublicLayout — wraps all public-facing pages with a shared Footer.
@@ -31,11 +33,11 @@ function App() {
       {/* ── Public pages — all get Footer via PublicLayout ── */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
-        {/* Legacy _id route (backward compat) */}
         <Route path="/moviedetail/:id" element={<MovieDetail />} />
-        {/* Pretty shareable URL: /movie/title-language-slug */}
         <Route path="/movie/:prettySlug" element={<MovieDetail />} />
         <Route path="/contact" element={<ContactForm />} />
+        {/* 404 — catch all unknown public routes */}
+        <Route path="*" element={<NotFound />} />
       </Route>
 
       {/* ── Signin — no footer (admin login page) ── */}
@@ -57,6 +59,7 @@ function App() {
         <Route path="comments"      element={<AdminComments />} />
         <Route path="navbar-menu"   element={<AdminNavbarMenu />} />
         <Route path="site-settings" element={<AdminSiteSettings />} />
+        <Route path="short-links"   element={<AdminShortLinks />} />
       </Route>
     </Routes>
   );

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X, Copy, Check, Share2 } from "lucide-react";
+import { X, Copy, Check, Share2, Loader2 } from "lucide-react";
 import { buildMovieUrl } from "../lib/movieUrl";
+import axiosbase from "../../axiosbasa";
 
 // ── Social platform config ────────────────────────────────
 const platforms = [
@@ -65,24 +66,55 @@ const platforms = [
 // ── SharePopup ────────────────────────────────────────────
 const SharePopup = ({ movie, onClose }) => {
   const [copied, setCopied] = useState(false);
+  const [shortUrl, setShortUrl] = useState("");
+  const [shortLoading, setShortLoading] = useState(true);
+  const [shortError, setShortError] = useState(false);
   const overlayRef = useRef(null);
 
-  const shareUrl = movie
+  // Full pretty URL (fallback if short URL fails)
+  const longUrl = movie
     ? `${window.location.origin}${buildMovieUrl(movie)}`
     : window.location.href;
+
+  // The URL shown/shared — short if available, else long
+  const shareUrl = shortUrl || longUrl;
 
   const shareTitle = movie?.title
     ? `Watch "${movie.title}" online — PakMovie`
     : "Watch on PakMovie";
 
-  // Close on Escape key
+  // ── Auto-generate short URL when popup opens ──────────────
+  useEffect(() => {
+    let cancelled = false;
+    setShortLoading(true);
+    setShortError(false);
+
+    axiosbase
+      .post("/shorten", { longUrl, movieId: movie?._id || null })
+      .then((res) => {
+        if (!cancelled && res.data?.shortUrl) {
+          setShortUrl(res.data.shortUrl);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setShortError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setShortLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [longUrl]);
+
+  // Close on Escape
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  // Trap scroll
+  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -91,19 +123,16 @@ const SharePopup = ({ movie, onClose }) => {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback for older browsers
       const input = document.createElement("input");
       input.value = shareUrl;
       document.body.appendChild(input);
       input.select();
       document.execCommand("copy");
       document.body.removeChild(input);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handleOverlayClick = (e) => {
@@ -120,7 +149,8 @@ const SharePopup = ({ movie, onClose }) => {
       aria-label="Share movie"
     >
       <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
-        {/* Header */}
+
+        {/* ── Header ── */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
             <Share2 className="w-4 h-4 text-blue-400" aria-hidden="true" />
@@ -135,7 +165,7 @@ const SharePopup = ({ movie, onClose }) => {
           </button>
         </div>
 
-        {/* Movie info strip */}
+        {/* ── Movie info strip ── */}
         {movie && (
           <div className="flex items-center gap-3 px-5 py-3 bg-gray-800/60">
             {movie.poster && (
@@ -156,16 +186,16 @@ const SharePopup = ({ movie, onClose }) => {
           </div>
         )}
 
-        {/* Social buttons */}
+        {/* ── Social buttons ── */}
         <div className="px-5 py-4 grid grid-cols-5 gap-3">
           {platforms.map((p) => (
             <a
               key={p.name}
-              href={p.getUrl(shareUrl, shareTitle, movie?.poster)}
+              href={shortLoading ? "#" : p.getUrl(shareUrl, shareTitle, movie?.poster)}
               target="_blank"
               rel="noopener noreferrer"
               title={p.name}
-              className={`${p.color} flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 transition`}
+              className={`${p.color} flex flex-col items-center justify-center gap-1 rounded-xl p-2.5 transition ${shortLoading ? "opacity-60 pointer-events-none" : ""}`}
               aria-label={`Share on ${p.name}`}
             >
               {p.icon}
@@ -176,18 +206,42 @@ const SharePopup = ({ movie, onClose }) => {
           ))}
         </div>
 
-        {/* Copy link */}
-        <div className="px-5 pb-5">
-          <p className="text-gray-400 text-xs mb-2 font-medium uppercase tracking-wider">
-            Shareable Link
-          </p>
+        {/* ── Short URL copy box ── */}
+        <div className="px-5 pb-5 space-y-2">
+          {/* Labels row */}
+          <div className="flex items-center justify-between">
+            <p className="text-gray-400 text-xs font-medium uppercase tracking-wider">
+              Short Link
+            </p>
+            {shortLoading && (
+              <span className="flex items-center gap-1 text-gray-500 text-xs">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Generating…
+              </span>
+            )}
+            {!shortLoading && shortError && (
+              <span className="text-yellow-500 text-xs">Using full URL</span>
+            )}
+            {!shortLoading && shortUrl && (
+              <span className="text-green-400 text-xs">✓ Ready</span>
+            )}
+          </div>
+
+          {/* URL box */}
           <div className="flex items-center gap-2 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2">
-            <span className="flex-1 text-blue-300 text-xs truncate select-all">
-              {shareUrl}
-            </span>
+            {shortLoading ? (
+              <span className="flex-1 text-gray-500 text-xs animate-pulse">
+                Building short link…
+              </span>
+            ) : (
+              <span className="flex-1 text-blue-300 text-xs truncate select-all font-mono">
+                {shareUrl}
+              </span>
+            )}
             <button
               onClick={handleCopy}
-              className={`shrink-0 flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md transition ${
+              disabled={shortLoading}
+              className={`shrink-0 flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md transition disabled:opacity-50 ${
                 copied
                   ? "bg-green-600 text-white"
                   : "bg-blue-600 hover:bg-blue-500 text-white"
@@ -195,18 +249,19 @@ const SharePopup = ({ movie, onClose }) => {
               aria-label="Copy link"
             >
               {copied ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  Copied!
-                </>
+                <><Check className="w-3.5 h-3.5" />Copied!</>
               ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  Copy
-                </>
+                <><Copy className="w-3.5 h-3.5" />Copy</>
               )}
             </button>
           </div>
+
+          {/* Show full URL as small note */}
+          {shortUrl && (
+            <p className="text-gray-600 text-[10px] truncate">
+              Full: {longUrl}
+            </p>
+          )}
         </div>
       </div>
     </div>

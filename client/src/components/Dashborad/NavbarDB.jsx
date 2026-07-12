@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Film, LogOut, LayoutDashboard, MessageSquare, List, Reply, Navigation, Settings } from "lucide-react";
+import { Menu, X, Film, LogOut, LayoutDashboard, MessageSquare, List, Reply, Navigation, Settings, Link2 } from "lucide-react";
 import axiosbase from "../../../axiosbasa";
 import { Button } from "../ui/button";
 import { showSuccess } from "../../lib/toast";
@@ -29,13 +29,14 @@ const NavbarDB = () => {
   };
 
   const navLinks = [
-    { to: "/admin-db/dashboard",     label: "Add Movie",      LucideIcon: LayoutDashboard },
-    { to: "/admin-db/movies",        label: "All Movies",     LucideIcon: List },
-    { to: "/admin-db/navbar-menu",   label: "Navbar Menu",    LucideIcon: Navigation },
-    { to: "/admin-db/site-settings", label: "Site Settings",   LucideIcon: Settings },
-    { to: "/admin-db/comments",      label: "Comments",       LucideIcon: Reply },
-    { to: "/admin-db/admin-contect", label: "Messages",       LucideIcon: MessageSquare },
-    { to: "/",                       label: "View Site",      LucideIcon: Film },
+    { to: "/admin-db/dashboard",     label: "Add Movie",    LucideIcon: LayoutDashboard },
+    { to: "/admin-db/movies",        label: "All Movies",   LucideIcon: List },
+    { to: "/admin-db/navbar-menu",   label: "Navbar Menu",  LucideIcon: Navigation },
+    { to: "/admin-db/site-settings", label: "Site Settings", LucideIcon: Settings },
+    { to: "/admin-db/comments",      label: "Comments",     LucideIcon: Reply },
+    { to: "/admin-db/admin-contect", label: "Messages",     LucideIcon: MessageSquare },
+    { to: "/admin-db/short-links",   label: "Short Links",  LucideIcon: Link2 },
+    { to: "/",                       label: "View Site",    LucideIcon: Film },
   ];
 
   return (
